@@ -17,3 +17,10 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+$router->group(['middleware'=>'authToken'],function () use ($router) {
+    $router->group(['prefix' => 'user'], function () use ($router) {
+        $router->post("/test",'account\AccountController@test'); //用户信息
+        $router->post("/login", 'account\AccountController@login');//用户登录
+        $router->post("/test11",'TestController@test'); //测试接口
+    });
+});
