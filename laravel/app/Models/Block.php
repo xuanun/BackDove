@@ -125,8 +125,8 @@ class Block extends Model
         DB::beginTransaction();
         try{
             $updateArray = [
-                'waste' =>$dung,
-                'dung' =>$waste,
+                'waste' =>$waste,
+                'dung' =>$dung,
                 'updated_time' => time(),
             ];
             DB::table($this->table)

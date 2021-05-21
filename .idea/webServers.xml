@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="851d22bf-de42-4d0a-b8b7-d8e0f197e516" name="test">
+        <fileTransfer rootFolder="/www/wwwroot/BackDove" accessType="SFTP" host="47.108.187.140" port="22" sshConfigId="9de59dce-3994-4900-ba38-ad5a6ca1b7d5" sshConfig="root@47.108.187.140:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

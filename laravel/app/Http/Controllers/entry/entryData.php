@@ -1362,4 +1362,26 @@ class entryData extends Controller
         $return_data = ['code'=>20000,'msg'=>'数据更新成功', 'data'=>[]];
         return response()->json($return_data);
     }
+
+    /**
+     * 数据录入--其他--列表
+     * @param Request $request
+     * @return mixed
+     */
+    public function otherDataList(Request $request)
+    {
+        $input = $request->all();
+        $user_id = isset($input['block_id']) ? $input['block_id'] : 0; //仓号ID
+
+        $block_id = isset($input['block_id']) ? $input['block_id'] : 0; //仓号ID
+        $dung_add = isset($input['dung_add']) ? $input['dung_add'] : 0;//鸽子粪
+        $waste_add = isset($input['waste_add']) ? $input['waste_add'] : 0;//废料
+        $model_block = new Block();
+        $old_data = $model_block->getBlockInfo($block_id);
+        $dung = $dung_add + $old_data->dung;
+        $waste = $waste_add + $old_data->waste;
+        $block_data = $model_block->editData($block_id, $dung, $waste);
+        return response()->json($block_data);
+    }
+
 }

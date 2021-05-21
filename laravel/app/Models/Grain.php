@@ -42,4 +42,18 @@ class Grain extends Model
         return  $data;
 
     }
+
+    /**
+     * 通过厂区ID查询全部饲料
+     * @param $factory_id
+     * @return mixed
+     */
+    public function getAll($factory_id)
+    {
+        return $results = DB::table($this->table)
+            ->select(DB::raw('grain_id, grain_name'))
+            ->where('factory_id', $factory_id)
+            ->get();
+    }
+
 }

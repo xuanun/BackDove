@@ -21,12 +21,12 @@ class GrainReceive extends Model
     public function getList($start_time, $end_time, $factory_id, $block_type, $block_id, $page_size)
     {
         $results =  DB::table('dove_grain_receive as receive')
-            ->select(DB::raw('receive.date as data_time, receive.receive_id, receive.issuer, receive.factory_id, factory.name as factory_name, receive.block_id, block.name as block_name, block.block_type, block.type_name, receive.number, receive.use_number, receive.grain_id, item.item_name as grain_name, receive.remarks'))
+            ->select(DB::raw('receive.date as data_time, receive.receive_id, receive.issuer, receive.factory_id, factory.name as factory_name, receive.block_id, block.name as block_name, block.block_type, block.type_name, receive.number, receive.use_number, receive.grain_id, grain.grain_name as grain_name, receive.remarks'))
             ->leftJoin('dove_user as user', 'user.id', '=', 'receive.uid')
             ->leftJoin('dove_factory as factory', 'factory.id', '=', 'receive.factory_id')
             ->leftJoin('dove_block as block', 'block.id', '=', 'receive.block_id')
-            ->leftJoin('dove_items as item', 'item.id', '=', 'receive.item_id');
-//            ->leftJoin('dove_grain as grain', 'grain.grain_id', '=', 'receive.grain_id');
+            ->leftJoin('dove_items as item', 'item.id', '=', 'receive.item_id')
+            ->leftJoin('dove_grain as grain', 'grain.grain_id', '=', 'receive.grain_id');
         if($start_time && $end_time){
             $results = $results->whereBetween('receive.date', [$start_time, $end_time]);
         }elseif($start_time && empty($end_time))

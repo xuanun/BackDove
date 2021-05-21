@@ -36,7 +36,7 @@ class News extends Model
             'pageSize'=>$page_size,
             'list'=>[]
         ];
-        $imgUrl = env('IMAGE_URL').env('NEWS_URL');
+        $imgUrl = env('IMAGE_URL');
 
         foreach($results as $v){
             $v->display_img = $imgUrl.$v->display_img;

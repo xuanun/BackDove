@@ -144,6 +144,7 @@ $router->group(['prefix' => 'user'], function () use ($router) {
         $router->post("/del_disinfect", 'agenda\AgendaController@delDisinfect');//消杀--删除
         $router->post("/get_breeder", 'agenda\AgendaController@getBreeder');//获取仓号饲养员
 
+        $router->post("/get_grain", 'agenda\AgendaController@getAllGrain');//获取饲料ID名字
         $router->post("/fodder_list", 'agenda\AgendaController@fodderList');//饲料消耗列表
         $router->post("/entry_fodder", 'agenda\AgendaController@entryFodder');//饲料消耗录入
         $router->post("/edit_fodder", 'agenda\AgendaController@editFodder');//饲料消耗编辑

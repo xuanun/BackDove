@@ -710,6 +710,23 @@ class AgendaController extends Controller
 
 
     /**
+     * 待办--饲料--获取饲料ID名字
+     * @param Request $request
+     * @return mixed
+     */
+    public function getAllGrain(Request $request)
+    {
+        $input = $request->all();
+        $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';//厂区ID
+        if(empty($factory_id))
+            return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
+        $model_grain = new Grain();
+        $grain_data = $model_grain->getAll($factory_id);
+        $return_data = ['code'=>20000,'msg'=>'请求成功', 'data'=>$grain_data];
+        return response()->json($return_data);
+    }
+
+    /**
      * 待办--消杀-编辑数据
      * @param Request $request
      * @return mixed
@@ -1291,8 +1308,8 @@ class AgendaController extends Controller
     {
         $input = $request->all();
         $date_time = isset($input['date_time']) ? $input['date_time'] : '';//时间
-        $start_time = date('Y-m-d', strtotime($date_time));//开始时间
-        $end_time = date('Y-m-d', strtotime("+1 month", strtotime($start_time)));//结束时间
+        $start_time = isset($input['start_time']) ? $input['start_time'] : date('Y-m-d', strtotime($date_time));//开始时间
+        $end_time = isset($input['end_time']) ? $input['end_time'] : date('Y-m-d', strtotime("+1 month", strtotime($start_time)));//结束时间
         $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';//厂区ID
         $user_name = isset($input['user_name']) ? $input['user_name'] : '';//用户名字
         $page_size = isset($input['page_size']) ? $input['page_size'] : 1; //每页条数
@@ -1325,6 +1342,12 @@ class AgendaController extends Controller
         $firm_id =  isset($input['firm_id']) ? $input['firm_id'] : '';//企业ID
         $model_rule = new Rule();
         $rule_data = $model_rule->getList($firm_id);
+        foreach ($rule_data as  $v){
+            if($v->state)
+                $v->state = true;
+            if(empty($v->state))
+                $v->state = false;
+        }
         $return_data = ['code'=>20000,'msg'=>'请求成功', 'data'=>$rule_data];
         return response()->json($return_data);
     }
@@ -1376,7 +1399,6 @@ class AgendaController extends Controller
         $rule_data = $model_rule->editData($rule_id,  $title, $user_id, $morn_start, $morn_end, $noon_start, $noon_end,$repeat_day);
         return response()->json($rule_data);
     }
-
 
     /**
      * 待办--考勤--上下班时间启用与禁用
