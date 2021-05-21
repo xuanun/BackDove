@@ -46,12 +46,12 @@ class AuthToken extends Middleware
                 return $next($request);
             }
             else{
-                return response()->json(['status_code'=>50000, 'message'=>'登录信息已经过期，请重新登录']);;
+                return response()->json(['status_code'=>50000, 'msg'=>'登录信息已经过期，请重新登录']);
             }
         }
         else {
             //如果取不到用户的token，返回错误信息
-            return response()->json(['status_code'=>50000, 'message'=>'用户未登录，请登录']);
+            return response()->json(['status_code'=>50000, 'msg'=>'用户未登录，请登录']);
         }
     }
 

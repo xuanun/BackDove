@@ -4,10 +4,13 @@
 namespace App\Http\Controllers;
 
 
+use Illuminate\Http\Request;
+
 class TestController extends Controller
 {
-    public function test()
+    public function test(Request $request)
     {
-        return 111;
+        $a = $request->path();
+        return response()->json(['status_code'=>2200,'msg'=>env('VERIFY_TOKEN'),  'data'=>[$a]]);
     }
 }
