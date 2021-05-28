@@ -17,10 +17,11 @@ class CageLog extends Model
      * @param $add_id
      * @param $reduce_num
      * @param $reduce_id
+     * @param $day_survival
      * 鸽笼数据日志
      * @return mixed
      */
-    public function addLog($user_id, $cage_id, $category_id, $add_number, $add_id, $reduce_num, $reduce_id)
+    public function addLog($user_id, $cage_id, $category_id, $add_number, $add_id, $reduce_num, $reduce_id, $day_survival)
     {
         try{
             $insertArray = [
@@ -31,6 +32,7 @@ class CageLog extends Model
                 'add_id' => $add_id,
                 'in_reduce' => $reduce_num,
                 'reduce_id' => $reduce_id,
+                'day_survival' => $day_survival,
                 'usage_y' => date('Y', time()),
                 'usage_m' => date('m', time()),
                 'usage_d' => date('d', time()),
@@ -55,11 +57,12 @@ class CageLog extends Model
      * @param $add_id
      * @param $reduce_num
      * @param $reduce_id
+     * @param $day_survival
      * 鸽笼数据修改日志
      * @return mixed
      */
     public function editLog($log_id, $user_id, $cage_id, $category_id,
-                           $add_number, $add_id, $reduce_num, $reduce_id)
+                           $add_number, $add_id, $reduce_num, $reduce_id, $day_survival)
     {
         try{
             $updateArray = [
@@ -70,6 +73,7 @@ class CageLog extends Model
                 'add_id' => $add_id,
                 'in_reduce' => $reduce_num,
                 'reduce_id' => $reduce_id,
+                'day_survival' => $day_survival,
                 'usage_y' => date('Y', time()),
                 'usage_m' => date('m', time()),
                 'usage_d' => date('d', time()),
@@ -176,5 +180,125 @@ class CageLog extends Model
             $data['list'][] = $v;
         }
         return  $data;
+    }
+
+    /**
+     * 获取留存
+     * @param $log_id
+     * @return mixed
+     */
+    public function getDaySurvival($log_id)
+    {
+        $results =  DB::table($this->table)
+            ->select(DB::raw('day_survival'))
+            ->where('log_id', $log_id)
+            ->first();
+        return isset($results->day_survival) ? $results->day_survival : 0;
+    }
+
+    /**
+     * 获取上月留存留存
+     * @param $data_time
+     * @param $cage_id
+     * @param $type_id
+     * @return mixed
+     */
+    public function getSurvivalByTime($data_time, $cage_id, $type_id)
+    {
+        $results =  DB::table($this->table)
+            ->select(DB::raw('day_survival'))
+            ->where('cage_id', $cage_id)
+            ->where('type_id', $type_id)
+            ->where('creatime', '<', $data_time)
+            ->orderBy('creatime', 'desc')
+            ->first();
+        return isset($results->day_survival) ? $results->day_survival : 0;
+    }
+
+    /**
+     * @param $start_time
+     * @param $end_time
+     * @param $factory_id
+     * @param $block_type
+     * @param $block_id
+     * 获取数据列表
+     * @return mixed
+     */
+    public function getStatementList($start_time, $end_time, $factory_id, $block_type, $block_id)
+    {
+        $results = DB::table('dove_cage_log as log')
+            ->select(DB::raw("log_id, log.cage_id, log.type_id, type.alias, log.day_survival, log.in_add, log.in_reduce, cage.block_id, cage.pigeon, cage.egg, cage.squab, cage.child, cage.youth, add.hatch, add.brood, add.conesting, add.added_out, add.added_wit, add.breeding, add.replenish, add.spell, reduce.disease, reduce.massacre, reduce.death, reduce.sell, reduce.disease_sell, reduce.getout, reduce.shift_to, reduce.dead_eggs, reduce.useless, block.id as block_id, block.name as block_name, factory.id as factory_id, factory.name as factory_name, FROM_UNIXTIME(log.creatime, '%Y-%m-%d') as log_time"))
+            ->leftJoin('dove_cage as cage', 'cage.id', '=', 'log.cage_id')
+            ->leftJoin('dove_block as block', 'cage.block_id', '=', 'block.id')
+            ->leftJoin('dove_factory as factory', 'factory.id', '=', 'block.factory_id')
+            ->leftJoin('dove_cage_add as add', 'log.add_id', '=', 'add.add_id')
+            ->leftJoin('dove_defusing_type as type', 'type.type_id', '=', 'log.type_id')
+            ->leftJoin('dove_cage_reduce as reduce', 'log.reduce_id', '=', 'reduce.reduce_id');
+        if($start_time && $end_time){
+            $results = $results->whereBetween('log.creatime', [$start_time, $end_time]);
+        }elseif($start_time && empty($end_time))
+        {
+            $end_time = $start_time + 86400;
+            $results = $results->where('log.creatime', [$start_time, $end_time]);
+        }elseif (empty($start_time) && $end_time)
+        {
+            $start_time = $end_time - 86400;
+            $results = $results->where('log.creatime', [$start_time, $end_time]);
+        }
+        if($factory_id)
+            $results =  $results->where('factory.id', $factory_id);
+        if($block_type)
+            $results =  $results->where('block.block_type', $block_type);
+        if($block_id)
+            $results =  $results->where('block.id', $block_id);
+        $results =  $results
+            //->orderBy('type_id','desc')
+            ->get();
+        return  $results;
+    }
+
+    /**
+     * @param $start_time
+     * @param $end_time
+     * @param $factory_id
+     * @param $block_type
+     * @param $block_id
+     * @param $type_id
+     * 获取数据列表
+     * @return mixed
+     */
+    public function getStatementListByType($start_time, $end_time, $factory_id, $block_type, $block_id, $type_id)
+    {
+        $results = DB::table('dove_cage_log as log')
+            ->select(DB::raw("log_id, log.cage_id, log.type_id, type.alias, log.day_survival, log.in_add, log.in_reduce, cage.block_id, cage.pigeon, cage.egg, cage.squab, cage.child, cage.youth, add.hatch, add.brood, add.conesting, add.added_out, add.added_wit, add.breeding, add.replenish, add.spell, reduce.disease, reduce.massacre, reduce.death, reduce.sell, reduce.disease_sell, reduce.getout, reduce.shift_to, reduce.dead_eggs, reduce.useless, block.id as block_id, block.name as block_name, factory.id as factory_id, factory.name as factory_name, FROM_UNIXTIME(log.creatime, '%Y-%m-%d') as log_time"))
+            ->leftJoin('dove_cage as cage', 'cage.id', '=', 'log.cage_id')
+            ->leftJoin('dove_block as block', 'cage.block_id', '=', 'block.id')
+            ->leftJoin('dove_factory as factory', 'factory.id', '=', 'block.factory_id')
+            ->leftJoin('dove_cage_add as add', 'log.add_id', '=', 'add.add_id')
+            ->leftJoin('dove_defusing_type as type', 'type.type_id', '=', 'log.type_id')
+            ->leftJoin('dove_cage_reduce as reduce', 'log.reduce_id', '=', 'reduce.reduce_id');
+        if($start_time && $end_time){
+            $results = $results->whereBetween('log.creatime', [$start_time, $end_time]);
+        }elseif($start_time && empty($end_time))
+        {
+            $end_time = $start_time + 86400;
+            $results = $results->where('log.creatime', [$start_time, $end_time]);
+        }elseif (empty($start_time) && $end_time)
+        {
+            $start_time = $end_time - 86400;
+            $results = $results->where('log.creatime', [$start_time, $end_time]);
+        }
+        if($factory_id)
+            $results =  $results->where('factory.id', $factory_id);
+        if($block_type)
+            $results =  $results->where('block.block_type', $block_type);
+        if($block_id)
+            $results =  $results->where('block.id', $block_id);
+        if($type_id)
+            $results =  $results->where('log.type_id', $type_id);
+        $results =  $results
+            //->orderBy('type_id','desc')
+            ->get();
+        return  $results;
     }
 }

@@ -22,7 +22,7 @@ class GrainLog extends Model
     public function getList($date_time, $factory_id, $item_id, $type_id, $reason, $page_size)
     {
         $results =  DB::table($this->table)
-            ->select(DB::raw('grain_id as id, record_time, unit, production, factory_id, factory.name, item.id as item_id, item.item_name as grain_name, unit_price, number, type as type_id, price, supplier, examiner, reason, return_time, manager, remarks, borrowing, uptime'))
+            ->select(DB::raw('grain_id as id, record_time, unit, production, factory_id, factory.name, item.id as item_id, grain_name, unit_price, number, type as type_id, price, supplier, examiner, reason, return_time, manager, remarks, borrowing, uptime'))
             ->leftJoin('dove_items as item', 'item.id', '=', 'dove_grain_log.item_id')
             ->leftJoin('dove_factory as factory', 'factory.id', '=', 'dove_grain_log.factory_id');
         if($reason)

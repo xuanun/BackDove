@@ -19,7 +19,7 @@ class Grain extends Model
     public function getList($factory_id, $item_id, $page_size)
     {
         $results =  DB::table($this->table)
-            ->select(DB::raw('grain_id, factory_id, factory.name, item.item_name as grain_name, unit_price, number, remarks'))
+            ->select(DB::raw('grain_id, factory_id, factory.name, grain_name, unit_price, number, remarks'))
             ->leftJoin('dove_items as item', 'item.id', '=', 'dove_grain.item_id')
             ->leftJoin('dove_factory as factory', 'factory.id', '=', 'dove_grain.factory_id');
         if($factory_id)

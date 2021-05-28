@@ -1258,6 +1258,7 @@ class AgendaController extends Controller
             }else{
                 $list[$v->uid]['user_id'] = $v->uid;
                 $list[$v->uid]['user_name'] = $v->user_name;
+                $list[$v->uid]['role_name'] = $v->role_name;
                 $list[$v->uid]['data_time'] = date('Y-m', strtotime($v->date));
                 $list[$v->uid]['late_count'] = 0;
                 $list[$v->uid]['no_clock_count'] = 0;

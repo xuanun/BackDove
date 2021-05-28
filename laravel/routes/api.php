@@ -21,7 +21,6 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 //用户路由
 $router->group(['prefix' => 'user'], function () use ($router) {
     $router->group(['middleware'=>['authToken']],function () use ($router) {
-        //$router->post("/test",'account\AccountController@test'); //测试接口
         $router->post("/logout", 'account\AccountController@logout');//用户退出登录
 
     });
@@ -71,7 +70,8 @@ $router->group(['prefix' => 'user'], function () use ($router) {
         $router->post("/opinion_list", 'IndexController@opinionList');//意见反馈列表
         $router->post("/edit_opinion", 'IndexController@editOpinion');//意见反馈修改读取状态
         $router->post("/batch_del", 'IndexController@batchDelOpinion');//意见反馈批量删除
-
+        $router->post("/versions_list", 'IndexController@versionsList');//版本更新列表
+        $router->post("/edit_versions", 'IndexController@editVersions');//修改版本
 
         $router->post("/edit_password", 'account\AccountController@editPassword');//修改密码
 //        $router->post("/test",'account\AccountController@test'); //测试接口
@@ -182,6 +182,12 @@ $router->group(['prefix' => 'user'], function () use ($router) {
         $router->post("/edit_state", 'agenda\AgendaController@editRuleState');//考勤--上下班时间启用禁用
         $router->post("/del_rule", 'agenda\AgendaController@delRule');//考勤--上下班时间删除
         $router->post("/add_range", 'agenda\AgendaController@addRange');//考勤--打卡地点
+
+        $router->post("/data_all_list", 'StatisticsController@dataStatement');//数据统计
+        $router->post("/data_brood", 'StatisticsController@dataBrood');//数据统计--育雏仓
+        $router->post("/data_youth", 'StatisticsController@dataYouth');//数据统计--飞棚仓
+        $router->post("/data_pigeon", 'StatisticsController@dataPigeon');//数据统计--生产仓种鸽
+
     });
     //uploadFirmImage
     $router->post("/login", 'account\AccountController@login');//用户登录

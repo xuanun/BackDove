@@ -135,11 +135,12 @@ class CageReduce extends Model
      * @param $clear_egg
      * @param $sick_num
      * @param $sell_num
+     * @param $getout
      * 鸽蛋减少
      * @return mixed
      */
     public function reduceEgg($user_id, $damaged_num, $bad_num, $to_num,
-                              $imperfect_num, $clear_egg, $sick_num, $sell_num)
+                              $imperfect_num, $clear_egg, $sick_num, $sell_num, $getout)
     {
         try{
             $insertArray = [
@@ -151,6 +152,7 @@ class CageReduce extends Model
                 'disease_sell' => $clear_egg,
                 'dead_eggs' => $sick_num,
                 'shift_to' => $to_num,
+                'getout' => $getout,
                 'usage_y' => date('Y', time()),
                 'usage_m' => date('m', time()),
                 'usage_d' => date('d', time()),

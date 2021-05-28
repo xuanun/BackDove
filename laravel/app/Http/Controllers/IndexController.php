@@ -8,6 +8,7 @@ use App\Models\Feedback;
 use App\Models\Firm;
 use App\Models\News;
 use App\Models\NewsCategory;
+use App\Models\Versions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
@@ -140,16 +141,16 @@ class IndexController  extends Controller
         $title = isset($input['title']) ? $input['title'] : '';
         $show_status = isset($input['show_status']) ? $input['show_status'] : 1;
         if(empty($img_url) || empty($title)) return response()->json(['code'=>60000,'msg'=>'参数错误', 'data'=>[]]);
-        $file_array = explode('.',$img_url);
-        if($file_array[1] == 'jpg' || $file_array[1] == 'jpeg' || $file_array[1] == 'png'|| $file_array[1] == 'gif') {
-            //新增轮播图
-            $model_banner = new Banner();
-            $return_data = $model_banner->addBanner($title, $img_url, $show_status, $firm_id, $position);
-            return response()->json($return_data);
-        }
-        else{
-            return ['code'=>40000,'msg'=>'文件格式不正确', 'data'=>[$img_url]];
-        }
+//        $file_array = explode('.',$img_url);
+//        if($file_array[1] == 'jpg' || $file_array[1] == 'jpeg' || $file_array[1] == 'png'|| $file_array[1] == 'gif') {
+        //新增轮播图
+        $model_banner = new Banner();
+        $return_data = $model_banner->addBanner($title, $img_url, $show_status, $firm_id, $position);
+        return response()->json($return_data);
+//        }
+////        else{
+////            return ['code'=>40000,'msg'=>'文件格式不正确', 'data'=>[$img_url]];
+////        }
     }
 
     /**
@@ -169,15 +170,15 @@ class IndexController  extends Controller
         if( empty($title) || empty($b_id)) return response()->json(['code'=>60000,'msg'=>'参数错误', 'data'=>[]]);
         $model_banner = new Banner();
         if($img_url){
-            $file_array = explode('.',$img_url);
-            if($file_array[1] == 'jpg' || $file_array[1] == 'jpeg' || $file_array[1] == 'png'|| $file_array[1] == 'gif') {
-                //修改轮播图
-                $return_data = $model_banner->editBannerInfo($b_id, $title, $img_url, $show_status, $position);
-                return response()->json($return_data);
-            }
-            else{
-                return ['code'=>40000,'msg'=>'文件格式不正确', 'data'=>[$img_url]];
-            }
+//            $file_array = explode('.',$img_url);
+//            if($file_array[1] == 'jpg' || $file_array[1] == 'jpeg' || $file_array[1] == 'png'|| $file_array[1] == 'gif') {
+            //修改轮播图
+            $return_data = $model_banner->editBannerInfo($b_id, $title, $img_url, $show_status, $position);
+            return response()->json($return_data);
+//            }
+//            else{
+//                return ['code'=>40000,'msg'=>'文件格式不正确', 'data'=>[$img_url]];
+//            }
         }else{
             $return_data = $model_banner->editBannerInfo($b_id, $title, $img_url, $show_status, $position);
             return response()->json($return_data);
@@ -254,18 +255,18 @@ class IndexController  extends Controller
         $serial = isset($input['serial']) ? $input['serial'] : 0;
         if(empty($img_url) || empty($title) || empty($content))
             return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
-        $file_array = explode('.',$img_url);
-        if(count($file_array) != 2) return response()->json(['code'=>40000,'msg'=>'文件格式不正确', 'data'=>[]]);
-        if($file_array[1] == 'jpg' || $file_array[1] == 'jpeg' || $file_array[1] == 'png'|| $file_array[1] == 'gif')
-        {
+//        $file_array = explode('.',$img_url);
+//        if(count($file_array) != 2) return response()->json(['code'=>40000,'msg'=>'文件格式不正确', 'data'=>[]]);
+//        if($file_array[1] == 'jpg' || $file_array[1] == 'jpeg' || $file_array[1] == 'png'|| $file_array[1] == 'gif')
+//        {
             //新增轮播图
-            $model_news = new News();
-            $return_data = $model_news->addNews($category_id, $title, $img_url, $content, $serial, $firm_id);
-            return response()->json($return_data);
-        }
-        else{
-            return ['code'=>40000,'msg'=>'文件格式不正确', 'data'=>[$img_url]];
-        }
+        $model_news = new News();
+        $return_data = $model_news->addNews($category_id, $title, $img_url, $content, $serial, $firm_id);
+        return response()->json($return_data);
+//        }
+//        else{
+//            return ['code'=>40000,'msg'=>'文件格式不正确', 'data'=>[$img_url]];
+//        }
     }
 
     /**
@@ -316,17 +317,17 @@ class IndexController  extends Controller
             return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
         $model_news = new News();
         if($img_url){
-            $file_array = explode('.',$img_url);
-            if(count($file_array) != 2) return response()->json(['code'=>40000,'msg'=>'文件格式不正确', 'data'=>[]]);
-            if($file_array[1] == 'jpg' || $file_array[1] == 'jpeg' || $file_array[1] == 'png'|| $file_array[1] == 'gif')
-            {
+//            $file_array = explode('.',$img_url);
+//            if(count($file_array) != 2) return response()->json(['code'=>40000,'msg'=>'文件格式不正确', 'data'=>[]]);
+//            if($file_array[1] == 'jpg' || $file_array[1] == 'jpeg' || $file_array[1] == 'png'|| $file_array[1] == 'gif')
+//            {
                 //新增轮播图
                 $return_data = $model_news->editNewsInfo($news_id, $category_id, $title, $img_url, $content, $serial);
                 return response()->json($return_data);
-            }
-            else{
-                return ['code'=>40000,'msg'=>'文件格式不正确', 'data'=>[$img_url]];
-            }
+//            }
+//            else{
+//                return ['code'=>40000,'msg'=>'文件格式不正确', 'data'=>[$img_url]];
+//            }
         }else{
             $return_data = $model_news->editNewsInfo($news_id, $category_id, $title, $img_url, $content, $serial);
             return response()->json($return_data);
@@ -437,6 +438,44 @@ class IndexController  extends Controller
             return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
         $model_feedback = new Feedback();
         $return_data = $model_feedback->batchDelFeedback($feedback_ids);
+        return response()->json($return_data);
+    }
+
+
+    /**
+     * 版本更新列表
+     * @param Request $request
+     * @return mixed
+     */
+    public function versionsList(Request $request)
+    {
+        $input = $request->all();
+        $model_versions = new Versions();
+        $return_data = $model_versions->getList();
+        return response()->json(['code'=>20000,'msg'=>'请求成功', 'data'=>$return_data]);
+    }
+
+    /**
+     * 修改版本
+     * @param Request $request
+     * @return mixed
+     */
+    public function editVersions(Request $request)
+    {
+        $input = $request->all();
+        $edition_id = isset($input['edition_id']) ? $input['edition_id'] : '';//数据ID
+        $platform = isset($input['platform']) ? $input['platform'] : '';//平台
+        $edition_num = isset($input['edition_num']) ? $input['edition_num'] : '';//版本号
+        $edition_name = isset($input['edition_name']) ? $input['edition_name'] : '';//版本名字
+        $edition_content = isset($input['edition_content']) ? $input['edition_content'] : '';//版本内容
+        $download = isset($input['download']) ? $input['download'] : '';//下载地址
+        $novation = isset($input['novation']) ? $input['novation'] : '';//是否强制更新
+
+        if( empty($edition_id) || empty($platform) ||  empty($edition_num) ||  empty($edition_name) ||  empty($edition_content) ||  empty($download))
+            return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
+
+        $model_versions = new Versions();
+        $return_data = $model_versions->updateData($edition_id, $platform, $edition_num, $edition_name, $edition_content, $download, $novation);
         return response()->json($return_data);
     }
 }

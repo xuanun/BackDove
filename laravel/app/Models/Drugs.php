@@ -93,7 +93,7 @@ class Drugs extends Model
     public function getDataList($data_time, $factory_id, $item_id, $production, $approved, $page_size)
     {
         $results =  DB::table($this->table)
-            ->select(DB::raw('drugs_id, item.item_name as item_name, factory_id, producedate, factory.name as factory_name, category, production, batch_number, unit_price, number, approved, creatime'))
+            ->select(DB::raw('drugs_id, drugs_name as item_name, factory_id, producedate, factory.name as factory_name, category, production, batch_number, unit_price, number, approved, creatime'))
             ->leftJoin('dove_items as item', 'item.id', '=', 'dove_drugs.item_id')
             ->leftJoin('dove_factory as factory', 'factory.id', '=', 'dove_drugs.factory_id');
         if($factory_id)

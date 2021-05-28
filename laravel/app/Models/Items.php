@@ -127,17 +127,17 @@ class Items extends Model
     public function editItem($item_id, $time_data, $type_id, $item_name, $firm_id, $item_img)
     {
         DB::beginTransaction();
-        $exists = $this->existsItem($item_name, $firm_id);
-        if(!$exists)
+        $id = $this->getItemId($item_name, $firm_id);
+        if($id == $item_id || empty($id))
         {
             try{
                 $updateArray = [
-                    'type_id' =>$type_id,
-                    'item_name' =>$item_name,
-                    'item_img' =>$item_img,
-                    'firm_id'=>$firm_id,
-                    'updated_time' => $time_data,
-                    'created_time' => time(),
+                'type_id' =>$type_id,
+                'item_name' =>$item_name,
+                'item_img' =>$item_img,
+                'firm_id'=>$firm_id,
+                'updated_time' => $time_data,
+                'created_time' => time(),
                 ];
                 DB::table($this->table)->where('id', $item_id)->update($updateArray);
                 $return = ['code'=>20000,'msg'=>'修改成功', 'data'=>[]];
@@ -146,7 +146,7 @@ class Items extends Model
                 $return = ['code'=>40000,'msg'=>'修改失败', 'data'=>[$e->getMessage()]];
             }
         }else{
-            $return = ['code'=>40004,'msg'=>'修改失败', 'data'=>['物品名字已经存在']];
+            $return = ['code'=>40004,'msg'=>'新增失败', 'data'=>['物品名字已经存在']];
         }
         DB::commit();
         return $return;
@@ -165,6 +165,22 @@ class Items extends Model
             ->where('item_name', $item_name)
             ->where('firm_id', $firm_id)
             ->exists();
+    }
+
+    /**
+     * 判断物品是否存在
+     * @param $item_name
+     * @param $firm_id
+     * @return mixed
+     */
+    public function getItemId($item_name, $firm_id)
+    {
+        $results = DB::table($this->table)
+            ->select(DB::raw('id'))
+            ->where('item_name', $item_name)
+            ->where('firm_id', $firm_id)
+            ->first();
+        return isset($results->id) ? $results->id : 0;
     }
 
     /**

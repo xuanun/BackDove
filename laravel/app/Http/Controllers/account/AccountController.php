@@ -139,27 +139,27 @@ class AccountController extends Controller
         $input = $request->all();
         $avatar = isset($input['file_name']) ? $input['file_name'] : '';
         if(empty($avatar)) return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
-        $file_array = explode('.',$avatar);
-        if(count($file_array) != 2) return response()->json(['code'=>40000,'msg'=>'文件格式不正确', 'data'=>[]]);
-        if($file_array[1] == 'jpg' || $file_array[1] == 'jpeg' || $file_array[1] == 'png'|| $file_array[1] == 'gif')
-        {
-            $token = $request->header('token');
-            $redis = Redis::connection('default');
-            $cacheKey = "dove_user_login_".$token;
-            $cacheValue = $redis->get($cacheKey);
-            $model_user = new User();
-            if(!empty($cacheValue)){
-                $data = json_decode($cacheValue, true);
-            }
-            else {
-                return response()->json(['code'=>50000,'msg'=>'token 已经失效', 'data'=>[]]);
-            }
-            $user_id = $data['id'];
-            $return_data = $model_user->editUserAvatar($user_id, $avatar);
-            return response()->json($return_data);
-        }else{
-            return ['code'=>40000,'msg'=>'文件格式不正确', 'data'=>[$avatar]];
+//       $file_array = explode('.',$avatar);
+//        if(count($file_array) != 2) return response()->json(['code'=>40000,'msg'=>'文件格式不正确', 'data'=>[]]);
+//        if($file_array[1] == 'jpg' || $file_array[1] == 'jpeg' || $file_array[1] == 'png'|| $file_array[1] == 'gif')
+//        {
+        $token = $request->header('token');
+        $redis = Redis::connection('default');
+        $cacheKey = "dove_user_login_".$token;
+        $cacheValue = $redis->get($cacheKey);
+        $model_user = new User();
+        if(!empty($cacheValue)){
+            $data = json_decode($cacheValue, true);
         }
+        else {
+            return response()->json(['code'=>50000,'msg'=>'token 已经失效', 'data'=>[]]);
+        }
+        $user_id = $data['id'];
+        $return_data = $model_user->editUserAvatar($user_id, $avatar);
+        return response()->json($return_data);
+//        }else{
+//            return ['code'=>40000,'msg'=>'文件格式不正确', 'data'=>[$avatar]];
+//        }
     }
 
 
