@@ -20,13 +20,54 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="870e5985-e9c0-42ea-a686-a79b27db3d8b" name="Default Changelist" comment="V1 版本提交">
-      <change afterPath="$PROJECT_DIR$/.idea/deployment.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/sshConfigs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/webServers.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/laravel/app/Http/Controllers/IndexDataController.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/laravel/app/Http/Controllers/external/ExternalController.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/laravel/app/Models/Frequency.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/laravel/app/Models/GrainAlways.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/laravel/app/Models/GrainX.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/.env.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Http/Controllers/IndexController.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Http/Controllers/IndexController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Http/Controllers/StatisticsController.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Http/Controllers/StatisticsController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Http/Controllers/TestController.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Http/Controllers/TestController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Http/Controllers/account/AccountController.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Http/Controllers/account/AccountController.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/laravel/app/Http/Controllers/agenda/AgendaController.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Http/Controllers/agenda/AgendaController.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/laravel/app/Http/Controllers/entry/entryData.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Http/Controllers/entry/entryData.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/laravel/app/Models/Block.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/Block.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Http/Controllers/message/MessageController.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Http/Controllers/message/MessageController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Http/Controllers/platform/PlatformController.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Http/Controllers/platform/PlatformController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Http/Controllers/power/DoveRolesController.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Http/Controllers/power/DoveRolesController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Http/Controllers/user/UserController.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Http/Controllers/user/UserController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Http/Middleware/AuthPermissions.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Http/Middleware/AuthPermissions.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Http/Middleware/AuthToken.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Http/Middleware/AuthToken.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/Anomaly.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/Anomaly.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/Cage.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/Cage.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/CageLog.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/CageLog.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/Defusing.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/Defusing.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/Disinfect.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/Disinfect.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/Drugs.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/Drugs.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/DrugsLog.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/DrugsLog.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/Factory.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/Factory.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/Firm.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/Firm.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/Grain.php" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/GrainLog.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/GrainLog.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/GrainReceive.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/GrainReceive.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/Items.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/Items.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/Leave.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/Leave.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/MedRecord.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/MedRecord.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/MedVaccine.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/MedVaccine.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/Message.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/Message.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/News.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/News.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/Permissions.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/Permissions.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/RolePermissions.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/RolePermissions.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/RoleUsers.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/RoleUsers.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/Roles.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/Roles.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/RuleRange.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/RuleRange.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/RuleType.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/RuleType.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/SaleType.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/SaleType.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/User.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/User.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/app/Models/UserFactory.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/app/Models/UserFactory.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/laravel/routes/api.php" beforeDir="false" afterPath="$PROJECT_DIR$/laravel/routes/api.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -161,7 +202,7 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../BackDove" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -169,7 +210,7 @@
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="nodejs_package_manager_path" value="npm" />
-    <property name="settings.editor.selected.configurable" value="preferences.editor" />
+    <property name="settings.editor.selected.configurable" value="web-ide.project.structure" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -265,6 +306,60 @@
       <workItem from="1621402915981" duration="48638000" />
       <workItem from="1621574587480" duration="1695000" />
       <workItem from="1621576701346" duration="1047000" />
+      <workItem from="1622187896874" duration="3775000" />
+      <workItem from="1622520562477" duration="666000" />
+      <workItem from="1626919024699" duration="469000" />
+      <workItem from="1627633000976" duration="1988000" />
+      <workItem from="1628132329298" duration="14140000" />
+      <workItem from="1628236501707" duration="687000" />
+      <workItem from="1628476012854" duration="7744000" />
+      <workItem from="1628589195740" duration="12315000" />
+      <workItem from="1628677142126" duration="2817000" />
+      <workItem from="1628679999810" duration="159000" />
+      <workItem from="1628752526426" duration="2613000" />
+      <workItem from="1629165518147" duration="23851000" />
+      <workItem from="1629688981681" duration="17391000" />
+      <workItem from="1630288194903" duration="14896000" />
+      <workItem from="1630567503940" duration="1642000" />
+      <workItem from="1630894628287" duration="7305000" />
+      <workItem from="1631242987365" duration="3388000" />
+      <workItem from="1631497141395" duration="2590000" />
+      <workItem from="1631865983765" duration="1917000" />
+      <workItem from="1631871429084" duration="1479000" />
+      <workItem from="1632366971135" duration="295000" />
+      <workItem from="1632367541478" duration="1813000" />
+      <workItem from="1632446898680" duration="118314000" />
+      <workItem from="1633656800195" duration="16857000" />
+      <workItem from="1633916083761" duration="35905000" />
+      <workItem from="1634175138099" duration="29988000" />
+      <workItem from="1634521514877" duration="20250000" />
+      <workItem from="1634634500163" duration="15953000" />
+      <workItem from="1634872645999" duration="2427000" />
+      <workItem from="1635477071533" duration="11000" />
+      <workItem from="1635477113364" duration="251000" />
+      <workItem from="1638762131392" duration="799000" />
+      <workItem from="1638840190395" duration="7686000" />
+      <workItem from="1638943735825" duration="818000" />
+      <workItem from="1639449855250" duration="2529000" />
+      <workItem from="1639452979024" duration="967000" />
+      <workItem from="1639455429512" duration="643000" />
+      <workItem from="1639461015661" duration="1415000" />
+      <workItem from="1639637439787" duration="658000" />
+      <workItem from="1639639449906" duration="219000" />
+      <workItem from="1639640191360" duration="913000" />
+      <workItem from="1640069166732" duration="2809000" />
+      <workItem from="1640076051484" duration="661000" />
+      <workItem from="1640940429000" duration="367000" />
+      <workItem from="1644825213361" duration="637000" />
+      <workItem from="1644979269552" duration="658000" />
+      <workItem from="1644993790239" duration="149000" />
+      <workItem from="1645495956845" duration="443000" />
+      <workItem from="1646363875916" duration="42000" />
+      <workItem from="1646639137431" duration="660000" />
+      <workItem from="1646721406704" duration="1207000" />
+      <workItem from="1646792934599" duration="144000" />
+      <workItem from="1648457583123" duration="170000" />
+      <workItem from="1648457859651" duration="1321000" />
     </task>
     <task id="LOCAL-00001" summary="V1 版本提交">
       <created>1621575270578</created>
@@ -296,89 +391,13 @@
     <option name="LAST_COMMIT_MESSAGE" value="V1 版本提交" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="552" y="178" key="#Deployment" timestamp="1621575482984">
-      <screen x="0" y="0" width="1920" height="1040" />
+    <state x="987" y="370" key="FileChooserDialogImpl" timestamp="1648457692438">
+      <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="552" y="178" key="#Deployment/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1621575482984" />
-    <state x="605" y="195" key="#Options" timestamp="1621575462551">
-      <screen x="0" y="0" width="1920" height="1040" />
+    <state x="987" y="370" key="FileChooserDialogImpl/0.0.2560.1400/-1920.127.1920.1040@0.0.2560.1400" timestamp="1648457692438" />
+    <state x="906" y="366" width="748" height="668" key="find.popup" timestamp="1648460533273">
+      <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="605" y="195" key="#Options/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1621575462551" />
-    <state x="536" y="165" key="#SSH_Configurations" timestamp="1621574795637">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="536" y="165" key="#SSH_Configurations/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1621574795637" />
-    <state x="0" y="0" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog" timestamp="1621337594349">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="-1147" y="295" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog/-1920.0.1920.1040/0.0.1920.1040@-1920.0.1920.1040" timestamp="1616032596648" />
-    <state x="0" y="0" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1621337594349" />
-    <state x="690" y="275" key="#com.jetbrains.php.actions.copyPaste.importReferences.PhpImportReferencesDialog" timestamp="1620268725464">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="-1230" y="275" key="#com.jetbrains.php.actions.copyPaste.importReferences.PhpImportReferencesDialog/-1920.0.1920.1040/0.0.1920.1040@-1920.0.1920.1040" timestamp="1616653319118" />
-    <state x="690" y="275" key="#com.jetbrains.php.actions.copyPaste.importReferences.PhpImportReferencesDialog/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1620268725464" />
-    <state x="740" y="275" key="FileChooserDialogImpl" timestamp="1621577755280">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="-1180" y="275" key="FileChooserDialogImpl/-1920.0.1920.1040/0.0.1920.1040@-1920.0.1920.1040" timestamp="1617086285577" />
-    <state x="740" y="275" key="FileChooserDialogImpl/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1621577755280" />
-    <state width="1877" height="282" key="GridCell.Tab.0.bottom" timestamp="1617359406259">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.bottom/-1920.0.1920.1040/0.0.1920.1040@-1920.0.1920.1040" timestamp="1617100009062" />
-    <state width="1877" height="282" key="GridCell.Tab.0.bottom/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1617359406259" />
-    <state width="1877" height="282" key="GridCell.Tab.0.center" timestamp="1617359406259">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.center/-1920.0.1920.1040/0.0.1920.1040@-1920.0.1920.1040" timestamp="1617100009062" />
-    <state width="1877" height="282" key="GridCell.Tab.0.center/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1617359406259" />
-    <state width="1877" height="282" key="GridCell.Tab.0.left" timestamp="1617359406259">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.left/-1920.0.1920.1040/0.0.1920.1040@-1920.0.1920.1040" timestamp="1617100009062" />
-    <state width="1877" height="282" key="GridCell.Tab.0.left/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1617359406259" />
-    <state width="1877" height="282" key="GridCell.Tab.0.right" timestamp="1617359406259">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.right/-1920.0.1920.1040/0.0.1920.1040@-1920.0.1920.1040" timestamp="1617100009062" />
-    <state width="1877" height="282" key="GridCell.Tab.0.right/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1617359406259" />
-    <state x="823" y="481" key="NewPhpClassDialog" timestamp="1621417083849">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="-784" y="258" key="NewPhpClassDialog/-1920.0.1920.1040/0.0.1920.1040@-1920.0.1920.1040" timestamp="1616469156713" />
-    <state x="823" y="481" key="NewPhpClassDialog/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1621417083849" />
-    <state x="391" y="175" key="SettingsEditor" timestamp="1620467893143">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="391" y="175" key="SettingsEditor/-1920.0.1920.1040/0.0.1920.1040@-1920.0.1920.1040" timestamp="1615453906839" />
-    <state x="391" y="175" key="SettingsEditor/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1620467893143" />
-    <state width="498" height="446" key="SwitcherDM" timestamp="1617183712680">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="498" height="446" key="SwitcherDM/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1617183712680" />
-    <state x="535" y="131" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1620612724528">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="-1385" y="131" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/-1920.0.1920.1040/0.0.1920.1040@-1920.0.1920.1040" timestamp="1615966583351" />
-    <state x="535" y="131" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1620612724528" />
-    <state x="475" y="97" width="1071" height="683" key="find.popup" timestamp="1621514665102">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="-1258" y="252" width="596" height="536" key="find.popup/-1920.0.1920.1040/0.0.1920.1040@-1920.0.1920.1040" timestamp="1615966791949" />
-    <state x="475" y="97" width="1071" height="683" key="find.popup/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1621514665102" />
-    <state x="788" y="250" key="ftp.server.browser" timestamp="1621575481287">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="788" y="250" key="ftp.server.browser/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1621575481287" />
-    <state x="616" y="240" key="run.anything.popup" timestamp="1621416301068">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="616" y="240" key="run.anything.popup/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1621416301068" />
-    <state x="628" y="230" width="672" height="678" key="search.everywhere.popup" timestamp="1621509648852">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="-1292" y="230" width="672" height="678" key="search.everywhere.popup/-1920.0.1920.1040/0.0.1920.1040@-1920.0.1920.1040" timestamp="1616383798784" />
-    <state x="628" y="230" width="672" height="678" key="search.everywhere.popup/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1621509648852" />
+    <state x="906" y="366" width="748" height="668" key="find.popup/0.0.2560.1400/-1920.127.1920.1040@0.0.2560.1400" timestamp="1648460533273" />
   </component>
 </project>

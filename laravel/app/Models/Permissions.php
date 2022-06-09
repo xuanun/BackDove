@@ -15,14 +15,12 @@ class Permissions extends Model
     /**
      * 查询权限路由里有没有 $url_path
      * @param  $url_path
-     * @param  $firm_id
      * @return mixed
      */
-    public function exitsUrlPath($url_path, $firm_id)
+    public function exitsUrlPath($url_path)
     {
         return DB::table($this->table)
             ->where('url_path', $url_path)
-            ->where('firm_id', $firm_id)
             ->where('data_status',self::NORMAL)
             ->exists();
     }
@@ -30,15 +28,13 @@ class Permissions extends Model
     /**
      * 通过权限ID查询路由
      * @param  $per_ids
-     * @param  $firm_id
      * @return mixed
      */
-    public function getPermissions($per_ids, $firm_id)
+    public function getPermissions($per_ids)
     {
         $results = DB::table($this->table)
             ->select(DB::raw('url_path'))
             ->whereIn('id', $per_ids)
-            ->where('firm_id', $firm_id)
             ->get();
         return !empty($results) ?  $results : [];
     }
@@ -166,7 +162,9 @@ class Permissions extends Model
     {
         return DB::table($this->table)
             ->select(DB::raw("id, p_id, name"))
+            ->where('name', '!=','平台设置')
             ->whereIn('id', $per_ids)
+            ->orWhere('p_id', 0)
             ->get();
     }
     /**
@@ -177,6 +175,55 @@ class Permissions extends Model
     {
         return DB::table($this->table)
             ->select(DB::raw("id, p_id, name"))
+            ->where('name', '!=','平台设置')
             ->get();
+    }
+
+    /**
+     * 超级管理员获取全部权限
+     * @return mixed
+     */
+    public function getAllPerById()
+    {
+        return DB::table($this->table)
+            ->select(DB::raw("id, p_id, name"))
+            ->get();
+    }
+
+    /**
+     * 获取企业超级管理员权限
+     * @return mixed
+     */
+    public function getFirmPer()
+    {
+        $result = DB::table($this->table)
+            ->select(DB::raw('id'))
+            ->where('name', '!=','平台设置')
+            ->get();
+        $per_ids = array();
+        foreach ($result as $v)
+        {
+            $per_ids[] = $v->id;
+        }
+        return $per_ids;
+    }
+
+    /**
+     * @param $p_id
+     * 查询指定父ID下的所有子ID
+     * @return mixed
+     */
+    public function getPerIdByPid($p_id)
+    {
+        $result = DB::table($this->table)
+            ->select(DB::raw('id'))
+            ->where('p_id', $p_id)
+            ->get();
+        $per_ids = array();
+        foreach ($result as $v)
+        {
+            $per_ids[] = $v->id;
+        }
+        return $per_ids;
     }
 }

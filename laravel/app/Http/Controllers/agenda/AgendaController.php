@@ -3,7 +3,6 @@
 
 namespace App\Http\Controllers\agenda;
 
-
 use App\Http\Controllers\Controller;
 use App\Models\Block;
 use App\Models\Cage;
@@ -13,7 +12,7 @@ use App\Models\Defusing;
 use App\Models\Disinfect;
 use App\Models\Drugs;
 use App\Models\DrugsLog;
-use App\Models\Grain;
+use App\Models\GrainAlways;
 use App\Models\GrainLog;
 use App\Models\GrainReceive;
 use App\Models\Leave;
@@ -84,62 +83,62 @@ class AgendaController extends Controller
         $date_time = isset($input['date_time']) ? $input['date_time'] : '';//记录时间
         //种鸽处理
         $p_category_id = isset($input['p_category_id']) ? $input['p_category_id'] : '';//类型ID
-        $p_death_amount = isset($input['p_death_amount']) ? $input['p_death_amount'] : '';//死亡数
+        $p_death_number = isset($input['p_death_number']) ? $input['p_death_number'] : '';//死亡数
         $p_handle_number = isset($input['p_handle_number']) ? $input['p_handle_number'] : '';//处理数
         $p_submit_remarks = isset($input['p_submit_remarks']) ? $input['p_submit_remarks'] : '';//提交备注
         //鸽蛋处理
         $e_category_id = isset($input['e_category_id']) ? $input['e_category_id'] : '';//类型ID
-        $e_death_amount = isset($input['e_death_amount']) ? $input['e_death_amount'] : '';//死亡数
+        $e_death_number = isset($input['e_death_number']) ? $input['e_death_number'] : '';//死亡数
         $e_handle_number = isset($input['e_handle_number']) ? $input['e_handle_number'] : '';//处理数
         $e_submit_remarks = isset($input['e_submit_remarks']) ? $input['e_submit_remarks'] : '';//提交备注
         //乳鸽处理
         $s_category_id = isset($input['s_category_id']) ? $input['s_category_id'] : '';//类型ID
-        $s_death_amount = isset($input['s_death_amount']) ? $input['s_death_amount'] : '';//死亡数
+        $s_death_number = isset($input['s_death_number']) ? $input['s_death_number'] : '';//死亡数
         $s_handle_number = isset($input['s_handle_number']) ? $input['s_handle_number'] : '';//处理数
         $s_submit_remarks = isset($input['s_submit_remarks']) ? $input['s_submit_remarks'] : '';//提交备注
         //童鸽处理
         $c_category_id = isset($input['c_category_id']) ? $input['c_category_id'] : '';//类型ID
-        $c_death_amount = isset($input['c_death_amount']) ? $input['c_death_amount'] : '';//死亡数
+        $c_death_number = isset($input['c_death_number']) ? $input['c_death_number'] : '';//死亡数
         $c_handle_number = isset($input['c_handle_number']) ? $input['c_handle_number'] : '';//处理数
         $c_submit_remarks = isset($input['c_submit_remarks']) ? $input['c_submit_remarks'] : '';//提交备注
         //青年鸽处理
         $y_category_id = isset($input['y_category_id']) ? $input['y_category_id'] : '';//类型ID
-        $y_death_amount = isset($input['y_death_amount']) ? $input['y_death_amount'] : '';//死亡数
+        $y_death_number = isset($input['y_death_number']) ? $input['y_death_number'] : '';//死亡数
         $y_handle_number = isset($input['y_handle_number']) ? $input['y_handle_number'] : '';//处理数
         $y_submit_remarks = isset($input['y_submit_remarks']) ? $input['y_submit_remarks'] : '';//提交备注
 
         DB::beginTransaction();
         //种鸽数据
         $p_data = $this->addHarmlessData($factory_id, $user_id, $date_time, $p_category_id,
-            $p_death_amount, $p_handle_number, $p_submit_remarks);
+            $p_death_number, $p_handle_number, $p_submit_remarks);
         if($p_data['code'] != 20000){
             DB::rollBack();
             return response()->json($p_data);
         }
         //鸽蛋数据
         $e_data = $this->addHarmlessData($factory_id, $user_id, $date_time, $e_category_id,
-            $e_death_amount, $e_handle_number, $e_submit_remarks);
+            $e_death_number, $e_handle_number, $e_submit_remarks);
         if($e_data['code'] != 20000){
             DB::rollBack();
             return response()->json($e_data);
         }
         //乳鸽数据
         $s_data = $this->addHarmlessData($factory_id, $user_id, $date_time, $s_category_id,
-            $s_death_amount, $s_handle_number, $s_submit_remarks);
+            $s_death_number, $s_handle_number, $s_submit_remarks);
         if($s_data['code'] != 20000){
             DB::rollBack();
             return response()->json($s_data);
         }
         //童鸽数据
         $c_data = $this->addHarmlessData($factory_id, $user_id, $date_time, $c_category_id,
-            $c_death_amount, $c_handle_number, $c_submit_remarks);
+            $c_death_number, $c_handle_number, $c_submit_remarks);
         if($c_data['code'] != 20000){
             DB::rollBack();
             return response()->json($c_data);
         }
         //鸽蛋数据
         $y_data = $this->addHarmlessData($factory_id, $user_id, $date_time, $y_category_id,
-            $y_death_amount, $y_handle_number, $y_submit_remarks);
+            $y_death_number, $y_handle_number, $y_submit_remarks);
         if($y_data['code'] != 20000){
             DB::rollBack();
             return response()->json($y_data);
@@ -185,13 +184,16 @@ class AgendaController extends Controller
         $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';
         $firm_id = isset($input['firm_id']) ? $input['firm_id'] : '';
         $date_time = isset($input['date_time']) ? $input['date_time'] : '';
-        $page_size = isset($input['page_size']) ? $input['page_size'] : 10;
+        $page_size = isset($input['page_size']) ? $input['page_size'] * 5 : 0;
         $page =  isset($input['page']) ? $input['page'] : 1;
+        $firm_id = $request->header('firmId');
+        //$firm_id = isset($input['firm_id']) ? $input['firm_id'] : 1;
         if(empty($firm_id))
             return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
         $model_defusing = new Defusing();
         $data_list = $model_defusing->getList($page_size, $factory_id, $date_time, $firm_id);
-        return response()->json($data_list);
+        return response()->json(['code'=>20000, 'msg'=>'',  'data'=>$data_list]);
+        //return response()->json($data_list);
     }
 
     /**
@@ -202,21 +204,77 @@ class AgendaController extends Controller
     public function editData(Request $request)
     {
         $input = $request->all();
-        $id = isset($input['id']) ? $input['id'] : '';
         $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';
         $user_id = isset($input['user_id']) ? $input['user_id'] : '';//用户ID
         $date_time = isset($input['date_time']) ? $input['date_time'] : '';
         //种鸽处理
-        $category_id = isset($input['category_id']) ? $input['category_id'] : '';//类型ID
-        $death_amount = isset($input['death_amount']) ? $input['death_amount'] : '';//死亡数
-        $handle_number = isset($input['handle_number']) ? $input['handle_number'] : '';//处理数
-        $submit_remarks = isset($input['submit_remarks']) ? $input['submit_remarks'] : '';//提交备注
-        if(empty($factory_id) || empty($date_time) || empty($category_id))
+        $p_id = isset($input['p_id']) ? $input['p_id'] : '';
+        $p_category_id = isset($input['p_category_id']) ? $input['p_category_id'] : '';//类型ID
+        $p_death_number = isset($input['p_death_number']) ? $input['p_death_number'] : '';//死亡数
+        $p_handle_number = isset($input['p_handle_number']) ? $input['p_handle_number'] : '';//处理数
+        $p_submit_remarks = isset($input['p_submit_remarks']) ? $input['p_submit_remarks'] : '';//提交备注
+        //鸽蛋处理
+        $e_id = isset($input['e_id']) ? $input['e_id'] : '';
+        $e_category_id = isset($input['e_category_id']) ? $input['e_category_id'] : '';//类型ID
+        $e_death_number = isset($input['e_death_number']) ? $input['e_death_number'] : '';//死亡数
+        $e_handle_number = isset($input['e_handle_number']) ? $input['e_handle_number'] : '';//处理数
+        $e_submit_remarks = isset($input['e_submit_remarks']) ? $input['e_submit_remarks'] : '';//提交备注
+        //乳鸽处理
+        $s_id = isset($input['s_id']) ? $input['s_id'] : '';
+        $s_category_id = isset($input['s_category_id']) ? $input['s_category_id'] : '';//类型ID
+        $s_death_number = isset($input['s_death_number']) ? $input['s_death_number'] : '';//死亡数
+        $s_handle_number = isset($input['s_handle_number']) ? $input['s_handle_number'] : '';//处理数
+        $s_submit_remarks = isset($input['s_submit_remarks']) ? $input['s_submit_remarks'] : '';//提交备注
+        //童鸽处理
+        $c_id = isset($input['c_id']) ? $input['c_id'] : '';
+        $c_category_id = isset($input['c_category_id']) ? $input['c_category_id'] : '';//类型ID
+        $c_death_number = isset($input['c_death_number']) ? $input['c_death_number'] : '';//死亡数
+        $c_handle_number = isset($input['c_handle_number']) ? $input['c_handle_number'] : '';//处理数
+        $c_submit_remarks = isset($input['c_submit_remarks']) ? $input['c_submit_remarks'] : '';//提交备注
+        //青年鸽处理
+        $y_id = isset($input['y_id']) ? $input['y_id'] : '';
+        $y_category_id = isset($input['y_category_id']) ? $input['y_category_id'] : '';//类型ID
+        $y_death_number = isset($input['y_death_number']) ? $input['y_death_number'] : '';//死亡数
+        $y_handle_number = isset($input['y_handle_number']) ? $input['y_handle_number'] : '';//处理数
+        $y_submit_remarks = isset($input['y_submit_remarks']) ? $input['y_submit_remarks'] : '';//提交备注
+
+        if(empty($factory_id) || empty($date_time))
             return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
         $model_defusing = new Defusing();
-        $return_data = $model_defusing->updateData($id, $factory_id, $user_id, $date_time, $category_id,
-            $death_amount, $handle_number, $submit_remarks);
-        return response()->json($return_data);
+        DB::beginTransaction();
+        //种鸽更新数据
+        $p_return_data = $model_defusing->updateData($p_id, $factory_id, $user_id, $date_time, $p_category_id,
+            $p_death_number, $p_handle_number, $p_submit_remarks);
+        if($p_return_data['code'] != 20000) {
+            DB::rollBack();
+            return response()->json($p_return_data);
+        }
+        //鸽蛋更新数据
+        $e_return_data = $model_defusing->updateData($e_id, $factory_id, $user_id, $date_time, $e_category_id,
+            $e_death_number, $e_handle_number, $e_submit_remarks);
+        if($e_return_data['code'] != 20000) {
+            DB::rollBack();
+            return response()->json($e_return_data);
+        }
+        //乳鸽更新数据
+        $s_return_data = $model_defusing->updateData($s_id, $factory_id, $user_id, $date_time, $s_category_id,
+            $s_death_number, $s_handle_number, $s_submit_remarks);
+        if($s_return_data['code'] != 20000) {
+            DB::rollBack();
+            return response()->json($s_return_data);
+        }
+        //童鸽更新数据
+        $c_return_data = $model_defusing->updateData($c_id, $factory_id, $user_id, $date_time, $c_category_id,
+            $c_death_number, $c_handle_number, $c_submit_remarks);
+        if($c_return_data['code'] != 20000) {
+            DB::rollBack();
+            return response()->json($c_return_data);
+        }
+        //青年鸽更新数据
+        $y_return_data = $model_defusing->updateData($y_id, $factory_id, $user_id, $date_time, $y_category_id,
+            $y_death_number, $y_handle_number, $y_submit_remarks);
+        DB::commit();
+        return response()->json($y_return_data);
     }
 
     /**
@@ -227,11 +285,22 @@ class AgendaController extends Controller
     public function delData(Request $request)
     {
         $input = $request->all();
-        $id = isset($input['id']) ? $input['id'] : '';
-        if(empty($id))
+        //种鸽处理
+        $p_id = isset($input['p_id']) ? $input['p_id'] : '';
+        //鸽蛋处理
+        $e_id = isset($input['e_id']) ? $input['e_id'] : '';
+        //乳鸽处理
+        $s_id = isset($input['s_id']) ? $input['s_id'] : '';
+        //童鸽处理
+        $c_id = isset($input['c_id']) ? $input['c_id'] : '';
+        //青年鸽处理
+        $y_id = isset($input['y_id']) ? $input['y_id'] : '';
+
+        if(empty($p_id) || empty($e_id) || empty($s_id) || empty($c_id) || empty($y_id))
             return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
         $model_defusing = new Defusing();
-        $return_data = $model_defusing->delData($id);
+        $ids = [$p_id, $e_id, $s_id, $c_id, $y_id];
+        $return_data = $model_defusing->delData($ids);
         return response()->json($return_data);
     }
     /**
@@ -242,13 +311,49 @@ class AgendaController extends Controller
     public function checkData(Request $request)
     {
         $input = $request->all();
-        $id = isset($input['id']) ? $input['id'] : '';
+        //种鸽处理
+        $p_id = isset($input['p_id']) ? $input['p_id'] : '';
+        //鸽蛋处理
+        $e_id = isset($input['e_id']) ? $input['e_id'] : '';
+        //乳鸽处理
+        $s_id = isset($input['s_id']) ? $input['s_id'] : '';
+        //童鸽处理
+        $c_id = isset($input['c_id']) ? $input['c_id'] : '';
+        //青年鸽处理
+        $y_id = isset($input['y_id']) ? $input['y_id'] : '';
+
         $type = isset($input['type']) ? $input['type'] : '';
         $user_id = isset($input['user_id']) ? $input['user_id'] : '';//审核人ID
         $examine_remarks = isset($input['examine_remarks']) ? $input['examine_remarks'] : '';
         $model_defusing = new Defusing();
-        $return_data = $model_defusing->checkData($id, $type, $user_id, $examine_remarks);
-        return response()->json($return_data);
+        DB::beginTransaction();
+        $p_return_data = $model_defusing->checkData($p_id, $type, $user_id, $examine_remarks);
+        if($p_return_data['code'] != 20000) {
+            DB::rollBack();
+            return response()->json($p_return_data);
+        }
+        $e_return_data = $model_defusing->checkData($e_id, $type, $user_id, $examine_remarks);
+        if($e_return_data['code'] != 20000) {
+            DB::rollBack();
+            return response()->json($e_return_data);
+        }
+        $s_return_data = $model_defusing->checkData($s_id, $type, $user_id, $examine_remarks);
+        if($s_return_data['code'] != 20000) {
+            DB::rollBack();
+            return response()->json($s_return_data);
+        }
+        $c_return_data = $model_defusing->checkData($c_id, $type, $user_id, $examine_remarks);
+        if($c_return_data['code'] != 20000) {
+            DB::rollBack();
+            return response()->json($c_return_data);
+        }
+        $y_return_data = $model_defusing->checkData($y_id, $type, $user_id, $examine_remarks);
+        if($y_return_data['code'] != 20000) {
+            DB::rollBack();
+            return response()->json($y_return_data);
+        }
+        DB::commit();
+        return response()->json($y_return_data);
     }
 
     /**
@@ -296,7 +401,8 @@ class AgendaController extends Controller
         $customer =  isset($input['customer']) ? $input['customer'] : '';//客户
         $pay_method =  isset($input['pay_method']) ? $input['pay_method'] : '';//收款方式
         $remarks =  isset($input['remarks']) ? $input['remarks'] : '';//备注
-        if(empty($factory_id)  || empty($type_id) || empty($date_time))
+        $firm_id = $request->header('firmId');
+        if(empty($factory_id)  || empty($type_id) || empty($date_time) ||empty($firm_id))
             return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
         $model_sale_type = new SaleType();
         $return_data = $model_sale_type->addData($date_time, $user_id,$factory_id,  $type_id,  $goods_name,
@@ -317,11 +423,14 @@ class AgendaController extends Controller
         $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';//厂区ID
         $type_id = isset($input['type_id']) ? $input['type_id'] : '';//类型ID
         $goods_name = isset($input['goods_name']) ? $input['goods_name'] : '';//货物名字
-        $page_size = isset($input['page_size']) ? $input['page_size'] : 10; //每页条数
+        $page_size = isset($input['page_size']) ? $input['page_size'] : 0; //每页条数
         $page =  isset($input['page']) ? $input['page'] : 1;//页数
+        $firm_id = $request->header('firmId');
+        if(empty($firm_id))
+            return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
 
         $model_sale_type = new SaleType();
-        $return_data = $model_sale_type->getList($start_time, $end_time, $factory_id, $type_id, $goods_name,  $page_size);
+        $return_data = $model_sale_type->getList($start_time, $end_time, $factory_id, $type_id, $goods_name,  $firm_id, $page_size);
         return response()->json(['code'=>20000,'msg'=>'请求成功', 'data'=>$return_data]);
     }
 
@@ -408,10 +517,10 @@ class AgendaController extends Controller
         $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';//厂区ID
         //$grain_name = isset($input['grain_name']) ? $input['grain_name'] : '';//物品名字
         $item_id = isset($input['item_id']) ? $input['item_id'] : '';//物品id
-        $page_size = isset($input['page_size']) ? $input['page_size'] : 10; //每页条数
+        $page_size = isset($input['page_size']) ? $input['page_size'] : 0; //每页条数
         $page =  isset($input['page']) ? $input['page'] : 1;//页数
 
-        $model_grain = new Grain();
+        $model_grain = new GrainAlways();
         $return_data = $model_grain->getList($factory_id, $item_id, $page_size);
         return response()->json($return_data);
     }
@@ -430,7 +539,7 @@ class AgendaController extends Controller
         $item_id = isset($input['item_id']) ? $input['item_id'] : '';//物品id
         $type_id = isset($input['type_id']) ? $input['type_id'] : '';//出入库类型
         $reason = isset($input['reason']) ? $input['reason'] : '';//出库原因
-        $page_size = isset($input['page_size']) ? $input['page_size'] : 10; //每页条数
+        $page_size = isset($input['page_size']) ? $input['page_size'] : 0; //每页条数
         $page =  isset($input['page']) ? $input['page'] : 1;//页数
 
         $model_grain = new GrainLog();
@@ -464,12 +573,62 @@ class AgendaController extends Controller
         $borrowing = isset($input['borrowing']) ? $input['borrowing'] : '';//借用单位
         $return_time = isset($input['return_time']) ? $input['return_time'] : '';//还回时间
         $remarks = isset($input['remarks']) ? $input['remarks'] : '';//备注
-
-        $model_grain = new GrainLog();
-        $return_data = $model_grain->editFood($id, $user_id, $record_time, $factory_id, $item_id, $grain_name, $production, $number, $unit_price, $price, $supplier, $examiner, $manager, $type_id, $reason, $borrowing, $remarks,$return_time);
+        $unit = isset($input['unit']) ? $input['unit'] : '';//单位
+        $old_type_id = $type_id;
+        $model_grain_log = new GrainLog();
+        $old_info = $model_grain_log->getInfo($id);
+        //入库判断总表有没有该粮食
+        $model_grain = new GrainAlways();
+        $grain_info = $model_grain->getInfo($grain_name);
+        DB::beginTransaction();
+        //入库
+        if($type_id == 1)
+        {
+            if(!isset($grain_info->grain_name))
+            {
+                $add_data = $model_grain->addData($item_id, $user_id, $factory_id, $production, $grain_name, $unit_price, $number, $supplier, $examiner, $remarks);
+                if($add_data['code'] != 20000) return response()->json($add_data);
+            }else
+            {
+                $old_number = $old_info->number;
+                if($old_number > $number)
+                {
+                    $change_number = $old_number - $number;
+                if($grain_info->number < $number) return response()->json(['code'=>40000,'msg'=>'出库数量不能大于库存数量', 'data'=>[]]);
+                    $update_data = $model_grain->updateData( $production, $factory_id, $grain_name, $change_number, 2);
+                    if($update_data['code'] != 20000) return response()->json($update_data);
+                }
+                if($old_number < $number)
+                {
+                    $change_number = $number - $old_number;
+                    $update_data = $model_grain->updateData( $production, $factory_id, $grain_name, $change_number, $type_id);
+                    if($update_data['code'] != 20000) return response()->json($update_data);
+                }
+            }
+        }
+        //出库
+        if($type_id == 2)
+        {
+            $old_number = $old_info->number;
+            if($old_number > $number)
+            {
+                $change_number = $old_number - $number;
+                $type_id = 1;
+//                if($grain_info->number < $number) return response()->json(['code'=>40000,'msg'=>'出库数量不能大于库存数量', 'data'=>[]]);
+                $update_data = $model_grain->updateData($production, $factory_id, $grain_name, $change_number, $type_id);
+                if($update_data['code'] != 20000) return response()->json($update_data);
+            }
+            if($old_number < $number)
+            {
+                $change_number = $number - $old_number;
+                if($grain_info->number < $change_number) return response()->json(['code'=>40000,'msg'=>'库存数量不足', 'data'=>[]]);
+                $update_data = $model_grain->updateData($production, $factory_id, $grain_name, $change_number, $type_id);
+                if($update_data['code'] != 20000) return response()->json($update_data);
+            }
+        }
+        $return_data = $model_grain_log->editFood($id, $user_id, $record_time, $factory_id, $item_id, $grain_name, $production, $number, $unit_price, $unit, $price, $supplier, $examiner, $manager, $old_type_id, $reason, $borrowing, $remarks,$return_time);
         return response()->json($return_data);
     }
-
 
     /**
      * 待办--粮食储藏--出入库--新增
@@ -485,7 +644,7 @@ class AgendaController extends Controller
         $grain_name = isset($input['grain_name']) ? $input['grain_name'] : '';//物品名字
         $item_id = isset($input['item_id']) ? $input['item_id'] : '';//物品id
         $production = isset($input['production']) ? $input['production'] : '';//厂家
-        $number = isset($input['number']) ? $input['number'] : '';//数量
+        $number = isset($input['number']) ? $input['number'] : 0;//数量
         $unit_price = isset($input['unit_price']) ? $input['unit_price'] : '';//单价
         $price = isset($input['price']) ? $input['price'] : '';//合计金额
         $supplier = isset($input['supplier']) ? $input['supplier'] : '';//供货单位
@@ -498,8 +657,34 @@ class AgendaController extends Controller
         $remarks = isset($input['remarks']) ? $input['remarks'] : '';//备注
         $unit = isset($input['unit']) ? $input['unit'] : '';//单位
 
+        //入库判断总表有没有该粮食
+        $model_grain = new GrainAlways();
+        $grain_info = $model_grain->getInfo($grain_name);
+        DB::beginTransaction();
+        //入库
+        if($type_id == 1)
+        {
+            if(!isset($grain_info->grain_name))
+            {
+                $add_data = $model_grain->addData($item_id, $user_id, $factory_id, $production, $grain_name, $unit_price, $number, $supplier, $examiner, $remarks);
+                if($add_data['code'] != 20000) return response()->json($add_data);
+            }else
+            {
+                $update_data = $model_grain->updateData($production, $factory_id, $grain_name, $number, $type_id);
+                if($update_data['code'] != 20000) return response()->json($update_data);
+            }
+        }
+        //出库
+        if($type_id == 2)
+        {
+            if($grain_info->number < $number) return response()->json(['code'=>40000,'msg'=>'出库数量不能大于库存数量', 'data'=>[]]);
+            $update_data = $model_grain->updateData($production, $factory_id, $grain_name, $number, $type_id);
+            if($update_data['code'] != 20000) return response()->json($update_data);
+        }
+
         $model_grain = new GrainLog();
         $return_data = $model_grain->addLog( $user_id, $record_time, $factory_id, $item_id, $grain_name, $production, $number, $unit_price, $price, $supplier, $examiner, $type_id, $manager, $reason, $borrowing, $remarks,$return_time, $unit);
+        DB::commit();
         return response()->json($return_data);
     }
 
@@ -514,6 +699,27 @@ class AgendaController extends Controller
         $id = isset($input['id']) ? $input['id'] : '';
         if(empty($id))
             return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
+
+        $model_grain_log = new GrainLog();
+        $old_info = $model_grain_log->getInfo($id);
+        $type_id = $old_info->type;
+        $grain_name = $old_info->grain_name;
+        $production = $old_info->production;
+        $factory_id = $old_info->factory_id;
+        $change_number = $old_info->number;
+        //入库判断总表有没有该粮食
+        $model_grain = new GrainAlways();
+        DB::beginTransaction();
+        //入库
+        if($type_id == 1)
+        {
+            $update_data = $model_grain->updateData( $production, $factory_id, $grain_name, $change_number, 2);
+        }
+        //出库
+        if($type_id == 2)
+        {
+            $update_data = $model_grain->updateData( $production, $factory_id, $grain_name, $change_number, 1);
+        }
         $model_grain = new GrainLog();
         $return_data = $model_grain->delData($id);
         return response()->json($return_data);
@@ -535,7 +741,7 @@ class AgendaController extends Controller
         $mode = isset($input['mode']) ? $input['mode'] : '';//消杀方式
         $drugs_id = isset($input['drugs_id']) ? $input['drugs_id'] : '';//药品ID
         $firm_id = isset($input['firm_id']) ? $input['firm_id'] : '';//企业ID
-        $page_size = isset($input['page_size']) ? $input['page_size'] : 10; //每页条数
+        $page_size = isset($input['page_size']) ? $input['page_size'] : 0; //每页条数
         $page =  isset($input['page']) ? $input['page'] : 1;//页数
         if(empty($firm_id))
             return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
@@ -565,6 +771,7 @@ class AgendaController extends Controller
         $item_id = isset($input['item_id']) ? $input['item_id'] : '';//物品ID
         $production = isset($input['production']) ? $input['production'] : '';//生产厂家
         $batch_number = isset($input['batch_number']) ? $input['batch_number'] : '';//生产批号
+        $drugs_name = isset($input['drugs_name']) ? $input['drugs_name'] : '';//物品名字
 
         $firm_id = isset($input['firm_id']) ? $input['firm_id'] : '';//企业ID
         if(empty($firm_id))
@@ -574,9 +781,11 @@ class AgendaController extends Controller
         $model_disinfect = new Disinfect();
         $disinfect_data = $model_disinfect->addData($record_time,  $factory_id, $block_id, $user_id, $mode, $drugs_id, $number, $remarks, $firm_id);
         $model_drugs = new Drugs();
-        if($disinfect_data['code'] != 20000)
+        if($disinfect_data['code'] != 20000){
+            DB::rollBack();
             return response()->json($disinfect_data);
-            $return_data = $model_drugs->updateData($item_id, $production, $factory_id, $batch_number, $number, 2);
+        }
+        $return_data = $model_drugs->updateData($drugs_name, $production, $factory_id, $batch_number, $number, 2);
         DB::commit();
         return response()->json($return_data);
     }
@@ -677,11 +886,14 @@ class AgendaController extends Controller
         $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';//厂区ID
         $block_type = isset($input['block_type']) ? $input['block_type'] : '';//仓号类型
         $block_id = isset($input['block_id']) ? $input['block_id'] : '';//仓号ID
-        $page_size = isset($input['page_size']) ? $input['page_size'] : 10; //每页条数
+        $page_size = isset($input['page_size']) ? $input['page_size'] : 0; //每页条数
         $page =  isset($input['page']) ? $input['page'] : 1;//页数
+        $firm_id = $request->header('firmId');
+        if(empty($firm_id))
+            return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
 
         $model_disinfect = new GrainReceive();
-        $return_data = $model_disinfect->getList($start_time, $end_time, $factory_id, $block_type, $block_id, $page_size);
+        $return_data = $model_disinfect->getList($start_time, $end_time, $factory_id, $block_type, $block_id, $firm_id, $page_size);
         return response()->json($return_data);
     }
 
@@ -699,16 +911,30 @@ class AgendaController extends Controller
         $data_time = isset($input['data_time']) ? $input['data_time'] : '';//领取时间
         $issuer = isset($input['issuer']) ? $input['issuer'] : '';//饲料发放人
         $grain_id = isset($input['grain_id']) ? $input['grain_id'] : '';//饲料ID
+        $grain_name = isset($input['grain_name']) ? $input['grain_name'] : '';//饲料名字
         $number = isset($input['number']) ? $input['number'] : '';//领取数量
         $use_number = isset($input['use_number']) ? $input['use_number'] : '';//使用数量
         $remarks = isset($input['remarks']) ? $input['remarks'] : ''; //备注
+        $production = isset($input['production']) ? $input['production'] : ''; //生产厂家
+        //判断 领取重量 是否大于库存 使用重量不能大于领取重量
+        $model_grain = new GrainAlways();
+        $grain_info = $model_grain->getInfo($grain_name);
+        if(!isset($grain_info->number)) return response()->json(['code'=>40000,'msg'=>'饲料不存在', 'data'=>[]]);
+        if($grain_info->number < $number)
+            return response()->json(['code'=>40000,'msg'=>'领取重量不能大于库存数量', 'data'=>[]]);
+        if($number < $use_number)
+            return response()->json(['code'=>40000,'msg'=>'使用数量不能大于领取数量', 'data'=>[]]);
 
+        //入库判断总表有没有该粮食
+        DB::beginTransaction();
+        $type_id = 2 ; //出库
+        $update_data = $model_grain->updateData($production, $factory_id, $grain_name, $number, $type_id);
+        if($update_data['code'] != 20000) return response()->json($update_data);
         $model_disinfect = new GrainReceive();
         $return_data = $model_disinfect->addData($factory_id, $block_id, $user_id,$data_time, $issuer, $grain_id, $number, $use_number, $remarks);
+        DB::commit();
         return response()->json($return_data);
     }
-
-
     /**
      * 待办--饲料--获取饲料ID名字
      * @param Request $request
@@ -720,14 +946,14 @@ class AgendaController extends Controller
         $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';//厂区ID
         if(empty($factory_id))
             return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
-        $model_grain = new Grain();
+        $model_grain = new GrainAlways();
         $grain_data = $model_grain->getAll($factory_id);
         $return_data = ['code'=>20000,'msg'=>'请求成功', 'data'=>$grain_data];
         return response()->json($return_data);
     }
 
     /**
-     * 待办--消杀-编辑数据
+     * 待办--饲料-编辑数据
      * @param Request $request
      * @return mixed
      */
@@ -744,8 +970,33 @@ class AgendaController extends Controller
         $number = isset($input['number']) ? $input['number'] : '';//领取数量
         $use_number = isset($input['use_number']) ? $input['use_number'] : '';//使用数量
         $remarks = isset($input['remarks']) ? $input['remarks'] : ''; //备注
+        $grain_name = isset($input['grain_name']) ? $input['grain_name'] : '';//饲料名字
+        $production = isset($input['production']) ? $input['production'] : '';//生产厂家
         if(empty($receive_id))
             return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
+
+        $model_disinfect = new GrainReceive();
+        $old_info = $model_disinfect->getInfo($receive_id);
+        //入库判断总表有没有该粮食
+        $model_grain = new GrainAlways();
+        $grain_info = $model_grain->getInfo($grain_name);
+        DB::beginTransaction();
+        $old_number = $old_info->number;
+        if($old_number > $number)
+        {
+            $change_number = $old_number - $number;
+            $type_id = 1;
+            $update_data = $model_grain->updateData($production, $factory_id, $grain_name, $change_number, $type_id);
+            if($update_data['code'] != 20000) return response()->json($update_data);
+        }
+        if($old_number < $number)
+        {
+            $type_id = 2;
+            $change_number = $number - $old_number;
+            if($grain_info->number < $change_number) return response()->json(['code'=>40000,'msg'=>'库存数量不足', 'data'=>[]]);
+            $update_data = $model_grain->updateData($production, $factory_id, $grain_name, $change_number, $type_id);
+            if($update_data['code'] != 20000) return response()->json($update_data);
+        }
 
         $model_disinfect = new GrainReceive();
         $return_data = $model_disinfect->updateData($receive_id, $factory_id,  $user_id, $block_id, $data_time, $issuer, $grain_id, $number, $use_number, $remarks);
@@ -847,6 +1098,7 @@ class AgendaController extends Controller
     {
         $input = $request->all();
         $data_time = isset($input['data_time']) ? $input['data_time'] : '';//时间
+        $firm_id = isset($input['firm_id']) ? $input['firm_id'] : '';//企业ID
         $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';//厂区ID
         $item_id = isset($input['item_id']) ? $input['item_id'] : '';//物品ID
         $production = isset($input['production']) ? $input['production'] : '';//生产厂家
@@ -856,7 +1108,7 @@ class AgendaController extends Controller
 //        if(empty($receive_id))
 //            return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
         $model_drugs = new Drugs();
-        $drugs_data = $model_drugs->getDataList($data_time, $factory_id, $item_id, $production, $approved, $page_size);
+        $drugs_data = $model_drugs->getDataList($data_time, $factory_id, $item_id, $production, $approved, $firm_id, $page_size);
         $return_data = ['code'=>20000,'msg'=>'请求成功', 'data'=>$drugs_data];
         return response()->json($return_data);
     }
@@ -876,12 +1128,16 @@ class AgendaController extends Controller
         $production = isset($input['production']) ? $input['production'] : '';//生产厂家
         $approved = isset($input['approved']) ? $input['approved'] : '';//批准人
         $out_reason = isset($input['out_reason']) ? $input['out_reason'] : ''; //出库原因
-        $page_size = isset($input['page_size']) ? $input['page_size'] : 1; //每页条数
+        $page_size = isset($input['page_size']) ? $input['page_size'] : 0; //每页条数
         $page =  isset($input['page']) ? $input['page'] : 1;//页数
 //        if(empty($receive_id))
 //            return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
+        $firm_id = $request->header('firmId');
+        if(empty($firm_id))
+            return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
+
         $model_drugs = new DrugsLog();
-        $drugs_data = $model_drugs->getDataList($type_id,$record_time, $factory_id, $category_id, $production, $approved, $out_reason, $page_size);
+        $drugs_data = $model_drugs->getDataList($type_id,$record_time, $factory_id, $category_id, $production, $approved, $out_reason, $firm_id, $page_size);
         $return_data = ['code'=>20000,'msg'=>'请求成功', 'data'=>$drugs_data];
         return response()->json($return_data);
     }
@@ -913,16 +1169,22 @@ class AgendaController extends Controller
         $type_id = isset($input['type_id']) ? $input['type_id'] : '';//出入库类型
         $remarks = isset($input['remarks']) ? $input['remarks'] : '';//备注
         $out_reason = isset($input['out_reason']) ? $input['out_reason'] : '';//出库原因
-
-        $model_drugs_log = new DrugsLog();
         $model_drugs = new Drugs();
+        //出库 判断 出库数量 是否大于库存
+        if($type_id == 2)
+        {
+            $drugs_number = $model_drugs->getDrugsNumber($drugs_name, $production, $factory_id, $batch_number);
+            if($drugs_number < $number)
+            return response()->json(['code'=>40000,'msg'=>'出库数量不能大于库存数量', 'data'=>$drugs_number]);
+        }
+        $model_drugs_log = new DrugsLog();
         DB::beginTransaction();
         $log_data = $model_drugs_log->addLog($user_id,$record_time, $item_id, $drugs_name, $supplier, $producedate, $production, $batch_number, $category_id, $number, $unit, $unit_price, $price, $factory_id, $approved, $receiver, $type_id, $remarks, $out_reason);
         if($log_data['code'] != 20000)
             return response()->json($log_data);
         $exits_status = $model_drugs->existsDrugs($item_id, $production, $factory_id, $batch_number);
         if($exits_status)
-            $return_data = $model_drugs->updateData($item_id, $production, $factory_id, $batch_number, $number, $type_id);
+            $return_data = $model_drugs->updateData($drugs_name, $production, $factory_id, $batch_number, $number, $type_id);
         else
             $return_data = $model_drugs->addData($item_id, $drugs_name, $producedate, $production, $batch_number, $category_id, $number,  $unit_price, $factory_id, $approved, $receiver);
         DB::commit();
@@ -957,9 +1219,62 @@ class AgendaController extends Controller
         $type_id = isset($input['type_id']) ? $input['type_id'] : '';//出入库类型
         $remarks = isset($input['remarks']) ? $input['remarks'] : '';//备注
         $out_reason = isset($input['out_reason']) ? $input['out_reason'] : '';//出库原因
-
-        $model_drugs = new DrugsLog();
-        $return_data = $model_drugs->editLog($log_id, $user_id,$record_time, $item_id, $drugs_name, $supplier, $producedate, $production, $batch_number, $category_id, $number, $unit, $unit_price, $price, $factory_id, $approved, $receiver, $type_id, $remarks, $out_reason);
+        $old_type_id = $type_id;
+        $model_drugs = new Drugs();
+        $model_drugs_log = new DrugsLog();
+        $drugs_info = $model_drugs_log->getInfo($log_id);
+        //出库 判断 使用数量 是否大于库存
+        //判断入库还是出库  入库
+        $change_number = 0;
+        DB::beginTransaction();
+        if($old_type_id == 1)
+        {
+            if($drugs_info->number > $number)
+            {
+                $type_id = 2;
+                $change_number = $drugs_info->number - $number;
+                $drugs_number = $model_drugs->getDrugsNumber($drugs_name, $production, $factory_id, $batch_number);
+                if($drugs_number < $change_number)
+                    return response()->json(['code'=>40000,'msg'=>'使用数量不能大于库存数量', 'data'=>$drugs_number]);
+            }
+            //判断入库还是出库  出库
+            if($drugs_info->number < $number)
+            {
+                $type_id = 1;
+                $change_number = $number - $drugs_info->number;
+            }
+            $drugs_data = $model_drugs->updateData($drugs_name, $production, $factory_id, $batch_number, $change_number, $type_id);
+            if($drugs_data['code'] != 20000)
+            {
+                DB::rollBack();
+                return response()->json($drugs_data);
+            }
+        }
+        if($old_type_id == 2)
+        {
+            if($drugs_info->number > $number)
+            {
+                $type_id = 1;
+                $change_number = $drugs_info->number - $number;
+            }
+            //判断入库还是出库  出库
+            if($drugs_info->number < $number)
+            {
+                $type_id = 2;
+                $change_number = $number - $drugs_info->number;
+                $drugs_number = $model_drugs->getDrugsNumber($drugs_name, $production, $factory_id, $batch_number);
+                if($drugs_number < $change_number)
+                    return response()->json(['code'=>40000,'msg'=>'使用数量不能大于库存数量', 'data'=>$drugs_number]);
+            }
+            $drugs_data = $model_drugs->updateData($drugs_name, $production, $factory_id, $batch_number, $change_number, $type_id);
+            if($drugs_data['code'] != 20000)
+            {
+                DB::rollBack();
+                return response()->json($drugs_data);
+            }
+        }
+        $return_data = $model_drugs_log->editLog($log_id, $user_id,$record_time, $item_id, $drugs_name, $supplier, $producedate, $production, $batch_number, $category_id, $number, $unit, $unit_price, $price, $factory_id, $approved, $receiver, $old_type_id, $remarks, $out_reason);
+        DB::commit();
         return response()->json($return_data);
     }
 
@@ -992,10 +1307,14 @@ class AgendaController extends Controller
         $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';//厂区ID
         $block_type = isset($input['block_type']) ? $input['block_type'] : '';//仓号类型
         $block_id = isset($input['block_id']) ? $input['block_id'] : '';//仓号ID
-        $page_size = isset($input['page_size']) ? $input['page_size'] : 1; //每页条数
+        $page_size = isset($input['page_size']) ? $input['page_size'] : 0; //每页条数
         $page =  isset($input['page']) ? $input['page'] : 1;//页数
+        $firm_id = $request->header('firmId');
+        if(empty($firm_id))
+            return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
+
         $model_med_record = new MedRecord();
-        $drugs_data = $model_med_record->getList($start_time, $end_time, $factory_id, $block_type, $block_id, $page_size);
+        $drugs_data = $model_med_record->getList($start_time, $end_time, $factory_id, $block_type, $block_id, $firm_id, $page_size);
         $return_data = ['code'=>20000,'msg'=>'请求成功', 'data'=>$drugs_data];
         return response()->json($return_data);
     }
@@ -1010,6 +1329,7 @@ class AgendaController extends Controller
         $input = $request->all();
         $user_id = isset($input['user_id']) ? $input['user_id'] : '';//用户id
         $block_id = isset($input['block_id']) ? $input['block_id'] : '';//仓号ID
+        $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';//厂区ID
         $record_time = isset($input['record_time']) ? $input['record_time'] : '';//记录时间
         $symptom = isset($input['symptom']) ? $input['symptom'] : '';//症状
         $number = isset($input['number']) ? $input['number'] : '';//生病数量
@@ -1020,9 +1340,25 @@ class AgendaController extends Controller
         $item_id = isset($input['item_id']) ? $input['item_id'] : '';//物品ID
         $approval = isset($input['approval']) ? $input['approval'] : '';//用药审批人
         $feedback = isset($input['feedback']) ? $input['feedback'] : '';//反馈
+        $batch_number = isset($input['batch_number']) ? $input['batch_number'] : '';//生产批号
+        $production = isset($input['production']) ? $input['production'] : '';//生产厂家
+        $drugs_name = isset($input['drugs_name']) ? $input['drugs_name'] : '';//药品名字
 
+        //出库 判断 使用数量 是否大于库存
+        $model_drugs = new Drugs();
+        $drugs_number = $model_drugs->getDrugsNumber($drugs_name, $production, $factory_id, $batch_number);
+        if($drugs_number < $dosage)
+            return response()->json(['code'=>40000,'msg'=>'使用数量不能大于库存数量', 'data'=>$drugs_number]);
+        DB::beginTransaction();
+        $drugs_data = $model_drugs->updateData($drugs_name, $production, $factory_id, $batch_number, $dosage, 2);
+        if($drugs_data['code'] != 20000)
+        {
+            DB::rollBack();
+            return response()->json($drugs_data);
+        }
         $model_med_record = new MedRecord();
         $return_data = $model_med_record->addData($user_id, $block_id, $record_time, $symptom, $number, $usage_time, $day, $dosage, $drugs_id, $item_id, $approval, $feedback);
+        DB::commit();
         return response()->json($return_data);
     }
 
@@ -1037,6 +1373,7 @@ class AgendaController extends Controller
         $record_id = isset($input['record_id']) ? $input['record_id'] : '';//数据ID
         $user_id = isset($input['user_id']) ? $input['user_id'] : '';//用户id
         $block_id = isset($input['block_id']) ? $input['block_id'] : '';//仓号ID
+        $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';//厂区ID
         $record_time = isset($input['record_time']) ? $input['record_time'] : '';//记录时间
         $symptom = isset($input['symptom']) ? $input['symptom'] : '';//症状
         $number = isset($input['number']) ? $input['number'] : '';//生病数量
@@ -1047,9 +1384,40 @@ class AgendaController extends Controller
         $item_id = isset($input['item_id']) ? $input['item_id'] : '';//物品ID
         $approval = isset($input['approval']) ? $input['approval'] : '';//用药审批人
         $feedback = isset($input['feedback']) ? $input['feedback'] : '';//反馈
+        $batch_number = isset($input['batch_number']) ? $input['batch_number'] : '';//生产批号
+        $production = isset($input['production']) ? $input['production'] : '';//生产厂家
+        $drugs_name = isset($input['drugs_name']) ? $input['drugs_name'] : '';//药品名字
 
         $model_med_record = new MedRecord();
+        $model_drugs = new Drugs();
+        $record_info = $model_med_record->getInfo($record_id);
+        //出库 判断 使用数量 是否大于库存
+        //判断入库还是出库  入库
+        $change_number = 0;
+        $type_id = 0;
+        if($record_info->dosage > $dosage)
+        {
+            $type_id = 1;
+            $change_number = $record_info->dosage - $dosage;
+        }
+        //判断入库还是出库  出库
+        if($record_info->dosage < $dosage)
+        {
+            $type_id = 2;
+            $change_number = $dosage - $record_info->dosage;
+            $drugs_number = $model_drugs->getDrugsNumber($drugs_name, $production, $factory_id, $batch_number);
+            if($drugs_number < $change_number)
+                return response()->json(['code'=>40000,'msg'=>'使用数量不能大于库存数量', 'data'=>$drugs_number]);
+        }
+        DB::beginTransaction();
+        $drugs_data = $model_drugs->updateData($drugs_name, $production, $factory_id, $batch_number, $change_number, $type_id);
+        if($drugs_data['code'] != 20000)
+        {
+            DB::rollBack();
+            return response()->json($drugs_data);
+        }
         $return_data = $model_med_record->editData($record_id, $user_id, $block_id, $record_time, $symptom, $number, $usage_time, $day, $dosage, $drugs_id, $item_id, $approval, $feedback);
+        DB::commit();
         return response()->json($return_data);
     }
 
@@ -1082,10 +1450,14 @@ class AgendaController extends Controller
         $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';//厂区ID
         $block_type = isset($input['block_type']) ? $input['block_type'] : '';//仓号类型
         $block_id = isset($input['block_id']) ? $input['block_id'] : '';//仓号ID
-        $page_size = isset($input['page_size']) ? $input['page_size'] : 1; //每页条数
+        $page_size = isset($input['page_size']) ? $input['page_size'] : 0; //每页条数
         $page =  isset($input['page']) ? $input['page'] : 1;//页数
+        $firm_id = $request->header('firmId');
+        if(empty($firm_id))
+            return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
+
         $model_med_vaccine = new MedVaccine();
-        $drugs_data = $model_med_vaccine->getList($start_time, $end_time, $factory_id, $block_type, $block_id, $page_size);
+        $drugs_data = $model_med_vaccine->getList($start_time, $end_time, $factory_id, $block_type, $block_id, $firm_id, $page_size);
         $return_data = ['code'=>20000,'msg'=>'请求成功', 'data'=>$drugs_data];
         return response()->json($return_data);
     }
@@ -1100,6 +1472,7 @@ class AgendaController extends Controller
         $input = $request->all();
         $user_id = isset($input['user_id']) ? $input['user_id'] : '';//用户id
         $block_id = isset($input['block_id']) ? $input['block_id'] : '';//仓号ID
+        $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';//厂区ID
         $record_time = isset($input['record_time']) ? $input['record_time'] : '';//记录时间
         $symptom = isset($input['symptom']) ? $input['symptom'] : '';//使用原因
         $number = isset($input['number']) ? $input['number'] : '';//接种数量
@@ -1114,9 +1487,25 @@ class AgendaController extends Controller
         $breeder = isset($input['breeder']) ? $input['breeder'] : '';//饲养员
         $method = isset($input['method']) ? $input['method'] : '';//免疫方法
         $feedback = isset($input['feedback']) ? $input['feedback'] : '';//反馈
+        $batch_number = isset($input['batch_number']) ? $input['batch_number'] : '';//生产批号
+        $production = isset($input['production']) ? $input['production'] : '';//生产厂家
+        $drugs_name = isset($input['drugs_name']) ? $input['drugs_name'] : '';//药品名字
 
+        //出库 判断 使用数量 是否大于库存
+        $model_drugs = new Drugs();
+        $drugs_number = $model_drugs->getDrugsNumber($drugs_name, $production, $factory_id, $batch_number);
+        if($drugs_number < $dosage)
+            return response()->json(['code'=>40000,'msg'=>'使用数量不能大于库存数量', 'data'=>$drugs_number]);
+        DB::beginTransaction();
+        $drugs_data = $model_drugs->updateData($drugs_name, $production, $factory_id, $batch_number, $dosage, 2);
+        if($drugs_data['code'] != 20000)
+        {
+            DB::rollBack();
+            return response()->json($drugs_data);
+        }
         $model_med_vaccine = new MedVaccine();
         $return_data = $model_med_vaccine->addData($user_id, $block_id, $record_time, $symptom, $number, $usage_time, $dosage, $drugs_id, $item_id, $approval, $charge, $remarks, $personnel, $breeder, $method, $feedback);
+        DB::commit();
         return response()->json($return_data);
     }
 
@@ -1146,9 +1535,41 @@ class AgendaController extends Controller
         $breeder = isset($input['breeder']) ? $input['breeder'] : '';//饲养员
         $method = isset($input['method']) ? $input['method'] : '';//免疫方法
         $feedback = isset($input['feedback']) ? $input['feedback'] : '';//反馈
+        $batch_number = isset($input['batch_number']) ? $input['batch_number'] : '';//生产批号
+        $production = isset($input['production']) ? $input['production'] : '';//生产厂家
+        $drugs_name = isset($input['drugs_name']) ? $input['drugs_name'] : '';//药品名字
+        $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';//厂区ID
 
         $model_med_vaccine = new MedVaccine();
+        $model_drugs = new Drugs();
+        $vaccine_info = $model_med_vaccine->getInfo($vaccine_id);
+        //出库 判断 使用数量 是否大于库存
+        //判断入库还是出库  入库
+        $change_number = 0;
+        $type_id = 0;
+        if($vaccine_info->dosage > $dosage)
+        {
+            $type_id = 1;
+            $change_number = $vaccine_info->dosage - $dosage;
+        }
+        //判断入库还是出库  出库
+        if($vaccine_info->dosage < $dosage)
+        {
+            $type_id = 2;
+            $change_number = $dosage - $vaccine_info->dosage;
+            $drugs_number = $model_drugs->getDrugsNumber($drugs_name, $production, $factory_id, $batch_number);
+            if($drugs_number < $change_number)
+                return response()->json(['code'=>40000,'msg'=>'使用数量不能大于库存数量', 'data'=>$drugs_number]);
+        }
+        DB::beginTransaction();
+        $drugs_data = $model_drugs->updateData($drugs_name, $production, $factory_id, $batch_number, $change_number, $type_id);
+        if($drugs_data['code'] != 20000)
+        {
+            DB::rollBack();
+            return response()->json($drugs_data);
+        }
         $return_data = $model_med_vaccine->editData($vaccine_id, $user_id, $block_id, $record_time, $symptom, $number, $usage_time, $dosage, $drugs_id, $item_id, $approval, $charge, $remarks, $personnel, $breeder, $method, $feedback);
+        DB::commit();
         return response()->json($return_data);
     }
 
@@ -1182,8 +1603,11 @@ class AgendaController extends Controller
         $user_name = isset($input['user_name']) ? $input['user_name'] : '';//用户名字
         $page_size = isset($input['page_size']) ? $input['page_size'] : 1; //每页条数
         $page =  isset($input['page']) ? $input['page'] : 1;//页数
+        $firm_id = $request->header('firmId');
+        if(empty($firm_id))
+            return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
         $model_leave = new Leave();
-        $leave_data = $model_leave->getList($start_time, $end_time, $factory_id, $user_name, $page_size);
+        $leave_data = $model_leave->getList($start_time, $end_time, $factory_id, $user_name, $firm_id, $page_size);
         $return_data = ['code'=>20000,'msg'=>'请求成功', 'data'=>$leave_data];
         return response()->json($return_data);
     }
@@ -1235,8 +1659,10 @@ class AgendaController extends Controller
         $end_time = date('Y-m-d', strtotime("+1 month", strtotime($start_time)));//结束时间
         $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';//厂区ID
         $user_name = isset($input['user_name']) ? $input['user_name'] : '';//用户名字
+        $start_status = isset($input['start_status']) ? $input['start_status'] : '';//签到状态
+        $end_status = isset($input['end_status']) ? $input['end_status'] : '';//签退状态
         $model_rule_type = new RuleType();
-        $rule_data = $model_rule_type->getList($start_time, $end_time, $factory_id, $user_name);
+        $rule_data = $model_rule_type->getList($start_time, $end_time, $factory_id, $user_name, $start_status, $end_status);
         $list = array();
         foreach ($rule_data as $v)
         {
@@ -1311,13 +1737,16 @@ class AgendaController extends Controller
         $date_time = isset($input['date_time']) ? $input['date_time'] : '';//时间
         $start_time = isset($input['start_time']) ? $input['start_time'] : date('Y-m-d', strtotime($date_time));//开始时间
         $end_time = isset($input['end_time']) ? $input['end_time'] : date('Y-m-d', strtotime("+1 month", strtotime($start_time)));//结束时间
+        //return  response()->json($start_time.'****'.$end_time);
         $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';//厂区ID
+        $start_status = isset($input['start_status']) ? $input['start_status'] : '';//签到状态  1：未打卡  2：迟到  3：正常
+        $end_status = isset($input['end_status']) ? $input['end_status'] : '';//签退状态 1：未打卡  2：早退  3：正常
         $user_name = isset($input['user_name']) ? $input['user_name'] : '';//用户名字
-        $page_size = isset($input['page_size']) ? $input['page_size'] : 1; //每页条数
+        $page_size = isset($input['page_size']) ? $input['page_size'] : 0; //每页条数
         $page =  isset($input['page']) ? $input['page'] : 1;//页数
         $model_rule_type = new RuleType();
         $model_leave = new Leave();
-        $rule_data = $model_rule_type->getUserList($start_time, $end_time, $factory_id, $user_name, $page_size);
+        $rule_data = $model_rule_type->getUserList($start_time, $end_time, $factory_id, $user_name, $page_size, $start_status, $end_status);
         foreach ($rule_data['list'] as $v)
         {
             $leave_start_time = date('Y-m-d H:i:s', strtotime($v->date));
@@ -1447,6 +1876,21 @@ class AgendaController extends Controller
         $model_range = new RuleRange();
         $rule_data = $model_range->addData($user_id, $firm_id, $longitude, $latitude, $address, $distance);
         return response()->json($rule_data);
+    }
+
+    /**
+     * 待办--考勤--获取打卡地点
+     * @param Request $request
+     * @return mixed
+     */
+    public function getRuleRange(Request $request)
+    {
+        $input = $request->all();
+        $firm_id =  isset($input['firm_id']) ? $input['firm_id'] : '';//企业ID
+        $model_range = new RuleRange();
+        $rule_data = $model_range->getList($firm_id);
+        $return_data = ['code'=>20000,'msg'=>'请求成功', 'data'=>$rule_data];
+        return response()->json($return_data);
     }
 
 }

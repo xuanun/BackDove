@@ -14,11 +14,12 @@ class GrainReceive extends Model
      * @param $factory_id
      * @param $block_type
      * @param $block_id
+     * @param $firm_id
      * @param $page_size
      * 查询列表
      * @return mixed
      */
-    public function getList($start_time, $end_time, $factory_id, $block_type, $block_id, $page_size)
+    public function getList($start_time, $end_time, $factory_id, $block_type, $block_id, $firm_id, $page_size)
     {
         $results =  DB::table('dove_grain_receive as receive')
             ->select(DB::raw('receive.date as data_time, receive.receive_id, receive.issuer, receive.factory_id, factory.name as factory_name, receive.block_id, block.name as block_name, block.block_type, block.type_name, receive.number, receive.use_number, receive.grain_id, grain.grain_name as grain_name, receive.remarks'))
@@ -26,7 +27,8 @@ class GrainReceive extends Model
             ->leftJoin('dove_factory as factory', 'factory.id', '=', 'receive.factory_id')
             ->leftJoin('dove_block as block', 'block.id', '=', 'receive.block_id')
             ->leftJoin('dove_items as item', 'item.id', '=', 'receive.item_id')
-            ->leftJoin('dove_grain as grain', 'grain.grain_id', '=', 'receive.grain_id');
+            ->leftJoin('dove_grain as grain', 'grain.grain_id', '=', 'receive.grain_id')
+            ->where('factory.firm_id', $firm_id);
         if($start_time && $end_time){
             $results = $results->whereBetween('receive.date', [$start_time, $end_time]);
         }elseif($start_time && empty($end_time))
@@ -43,19 +45,29 @@ class GrainReceive extends Model
         if($factory_id)
             $results = $results->where('receive.factory_id', $factory_id);
         $results = $results
-            ->orderBy('receive_id','desc')
-            ->paginate($page_size);
+            ->orderBy('receive_id','desc');
+        if($page_size)
+        {
+            $results = $results->paginate($page_size);
+            $data = [
+                'total'=>$results->total(),
+                'currentPage'=>$results->currentPage(),
+                'pageSize'=>$page_size,
+                'list'=>[]
+            ];
 
-        $data = [
-            'total'=>$results->total(),
-            'currentPage'=>$results->currentPage(),
-            'pageSize'=>$page_size,
-            'list'=>[]
-        ];
-        foreach($results as $v){
-            $data['list'][] = $v;
+            foreach($results as $v){
+                $data['list'][] = $v;
+            }
+            return  $data;
+        }else{
+            $results = $results->get();
+            $data['list'] = [];
+            foreach($results as $v){
+                $data['list'][] = $v;
+            }
+            return  $data;
         }
-        return  $data;
     }
 
     /**
@@ -71,7 +83,7 @@ class GrainReceive extends Model
      * 新增异常数据
      * @return mixed
      */
-    public function addData($factory_id, $block_id, $user_id,$data_time, $issuer, $grain_id, $number, $use_number, $remarks)
+    public function addData($factory_id, $block_id, $user_id, $data_time, $issuer, $grain_id, $number, $use_number, $remarks)
     {
         try{
             $insertArray = [
@@ -167,5 +179,32 @@ class GrainReceive extends Model
         return $return;
     }
 
+    /**
+     * @param $receive_id
+     * 查询数据详情
+     * @return mixed
+     */
+    public function getInfo($receive_id)
+    {
+        return $results =  DB::table($this->table)
+            ->select(DB::raw('receive_id, issuer, uid, factory_id, block_id, number, use_number, grain_id, item_id, remarks'))
+            ->where('receive_id', $receive_id)
+            ->first();
+    }
 
+    /**
+     * @param $firm_id
+     * @param $data_time
+     * 饲料出库统计
+     * @return mixed
+     */
+    public function getAmount($firm_id, $data_time)
+    {
+        return $result = DB::table('dove_grain_receive as grain_receive')
+            ->select(DB::raw('sum(grain_receive.use_number) as sum_use_number'))
+            ->leftJoin('dove_factory as factory', 'factory.id', '=', 'grain_receive.factory_id')
+            ->where("factory.firm_id",$firm_id)
+            ->where('grain_receive.date', $data_time)
+            ->first();
+    }
 }

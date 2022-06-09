@@ -3,6 +3,10 @@ namespace App\Http\Controllers\account;
 
 use App\Http\Controllers\Controller;
 use App\Models\Firm;
+use App\Models\Permissions;
+use App\Models\RolePermissions;
+use App\Models\Roles;
+use App\Models\RoleUsers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
@@ -37,12 +41,18 @@ class AccountController extends Controller
         }
         if(empty($data)) return response()->json(['code'=>40000,'msg'=>'账号不存在', 'data'=>[]]);
         $obj_password = $data['password'];
-        //$str = 'eyJpdiI6ImN6K0wxRGQwMENYS3hXdkNXNllwY0E9PSIsInZhbHVlIjoiUjZjbW5rbmRNYjdqaW1wMzhxTE5xNTBKSTY3ZEo5NVgraHEvQmpPOXNHUT0iLCJtYWMiOiJmYzJlODk3YWIzOTBkZDMwODhiYWE1MTY5MDRmMWE2NDMwMDRkMmM4MTZkYTRhZjgyMTU2NTcyZTQ2ODdlN2FlIn0=';
         $obj_password = decrypt($obj_password);
 //        return $obj_password;
         if($password != $obj_password) return response()->json(['code'=>40000,'msg'=>'密码不正确',  'data'=>[]]);
         $return = $user->UserLogin($data['id']);
         if($return['code'] == 20000){
+            //判断他所在的企业是否为启用状态
+            if($data['firm_id'])
+            {
+                $model_firm = new Firm();
+                $firm_exists = $model_firm->existsFirmById($data['firm_id']);
+                if(!$firm_exists) return response()->json(['code'=>40000,'msg'=>'账号没有企业或企业被关闭',  'data'=>[]]);
+            }
             $return['data']['user']['id'] = $data['id'];
             $return['data']['user']['token'] = $token;
             $return['data']['user']['user_name'] = $data['user_name'];
@@ -55,7 +65,7 @@ class AccountController extends Controller
             $return['data']['user']['created_time'] = $data['created_time'];
             $return['data']['user']['updated_time'] = $data['updated_time'];
             $return['time'] = time();
-            $user_key = "dove_uer".$mobile;
+            $user_key = "dove_user".$mobile;
             $old_token = $redis->get($user_key);
             if($old_token)
             {
@@ -204,7 +214,7 @@ class AccountController extends Controller
         $input = $request->all();
         $firm_id = isset($input['firm_id']) ? $input['firm_id'] : '';
         $model_firm = new Firm();
-        if($firm_id === 0) {
+        if($firm_id === 0 || $firm_id === '0') {
             $firm_data = $model_firm->getFirmList();
         } else{
             $firm_data = $model_firm->getFirmInfo($firm_id);
@@ -212,9 +222,61 @@ class AccountController extends Controller
         return response()->json(['code'=>20000,'msg'=>"请求成功",  'data'=>$firm_data]);
     }
 
+    /**
+     * 判断权限显示那些菜单
+     * @param Request $request
+     * @return mixed
+     */
+    public function checkUserMenu(Request $request)
+    {
+        $input = $request->all();
+        $user_id = isset($input['user_id']) ? $input['user_id'] : []; //用户ID
+        if(empty($user_id))  return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
+        //超级账号
+        //if($user_id == 1)  return response()->json(['code'=>20000, 'msg'=>'超级账号', 'data'=>[]]);
+        $model_permissions = new Permissions();
+
+        if($user_id == 1)
+        {
+            $p_menu = $model_permissions->getAllPerById();
+            $per_info = $p_menu;
+        }else{
+            //获取角色ID
+            $model_role_users = new RoleUsers();
+            $role_id = $model_role_users->getRoleIdByUserId($user_id);
+
+            $model_role = new Roles();
+            $role_info = $model_role->getRoleName($role_id);
+            //获取主菜单
+            $p_id = 0;
+
+            $ids = $model_permissions->getPerIdByPid($p_id);
+
+            $p_menu = $model_permissions->getPermissionsInfo($ids);
+
+            //获取角色权限菜单
+            $model_role_permissions = new RolePermissions();
+            $per_info = $model_role_permissions->getPerInfo($role_id);
+        }
+        $return_data = array();
+        foreach ($per_info as $v){
+            foreach ($p_menu as $value){
+                if($v->p_id == $value->id)
+                {
+                    $return_data[$value->id]['id'] = $value->id;
+                    $return_data[$value->id]['name'] = $value->name;
+                    $return_data[$value->id]['data'][] = $v;
+                }
+            }
+        }
+        $return_data = array_values($return_data);
+        return response()->json(['code'=>20000, 'msg'=>'', 'data'=>$return_data]);
+    }
+
+
     //测试接口
     public function test()
     {
-        return response()->json(['code'=>20000,'msg'=>env('VERIFY_TOKEN'),  'data'=>[]]);
+        return response()->json(['code'=>20000,'msg'=>env('VERIFY_TOKEN').'****这是一个测试接口',  'data'=>[]]);
     }
 }

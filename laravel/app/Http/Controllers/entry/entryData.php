@@ -13,6 +13,7 @@ use App\Models\CageCategory;
 use App\Models\CageLog;
 use App\Models\CageReduce;
 use App\Models\EarlyWarning;
+use App\Models\Frequency;
 use App\Models\UserFactory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,7 +30,6 @@ class entryData extends Controller
     {
         $input = $request->all();
 
-        //$category_id = isset($input['category_id']) ? $input['category_id'] : 0; //仓库类型
         $category_str = isset($input['category_str']) ? $input['category_str'] : ''; //squab, pigeon, egg, child, youth
         $block_id = isset($input['block_id']) ? $input['block_id'] : 0;
         if(empty($block_id) || empty($category_str)) return response()->json(['code'=>60000,'msg'=>'缺少参数',  'data'=>[]]);
@@ -49,12 +49,12 @@ class entryData extends Controller
             return response()->json(['code'=>50000,'msg'=>'你的登录信息已失效',  'data'=>[]]);
         }
         if(empty($block_id) || empty($cage_id))
-            return response()->json(['status_code'=>60000,'msg'=>'缺少参数',  'data'=>[]]);
+            return response()->json(['code'=>60000,'msg'=>'缺少参数',  'data'=>[]]);
         //查询鸽笼详情  日龄 存栏数
 
         $cage_info = $cage_model->getCageInfo($cage_id);
         if(empty($cage_info))
-            return response()->json(['status_code'=>40000,'msg'=>'鸽笼ID不存在',  'data'=>[]]);
+            return response()->json(['code'=>40000,'msg'=>'鸽笼ID不存在',  'data'=>[]]);
         //查询饲养员 护工
         $user_factory_model = new UserFactory();
         $user_info = $user_factory_model->getUsersInfo($block_id);
@@ -71,19 +71,40 @@ class entryData extends Controller
         else
             $age_day = 0;
         $return_data['age_day'] = $age_day;
-        if($category_str == 'squab')
+        $type_id = 0;
+        if($category_str == 'squab'){
+            $type_id = 3; //鸽子类型 1：种鸽 2：鸽蛋 3：乳鸽
             $return_data['survival'] = $cage_info->squab;
-        if($category_str == 'pigeon')
+        }
+        if($category_str == 'pigeon'){
+            $type_id = 1; //鸽子类型 1：种鸽 2：鸽蛋 3：乳鸽
             $return_data['survival'] = $cage_info->pigeon;
-        if($category_str == 'egg')
+        }
+        if($category_str == 'egg'){
+            $type_id = 2; //鸽子类型 1：种鸽 2：鸽蛋 3：乳鸽
             $return_data['survival'] = $cage_info->egg;
-        if($category_str == 'child')
+        }
+        if($category_str == 'child'){
+            $type_id = 4; //鸽子类型 1：种鸽 2：鸽蛋 3：乳鸽
             $return_data['survival'] = $cage_info->child;
-        if($category_str == 'youth')
+        }
+        if($category_str == 'youth'){
+            $type_id = 5; //鸽子类型 1：种鸽 2：鸽蛋 3：乳鸽
             $return_data['survival'] = $cage_info->youth;
+        }
+        //判断该鸽笼鸽子类型今日是否已经录入数据
+        $date_y = date('Y', time());
+        $date_m = date('m', time());
+        $date_d = date('d', time());
+        $model_cage_log = new CageLog();
+        $exists_status = $model_cage_log->existsLog($cage_id, $type_id, $date_y, $date_m, $date_d);
+        if($exists_status)
+            $exists = 1;
+        else
+            $exists = 0;
+        $return_data['exists_status'] = $exists;
         $return_data['list'] = $user_info;
         return response()->json(['code'=>20000, 'msg'=>'请求成功',  'data'=>$return_data]);
-
     }
 
     /**
@@ -102,7 +123,7 @@ class entryData extends Controller
         $factory_id = isset($input['factory_id']) ? $input['factory_id'] : 0; //厂区ID
         $block_id = isset($input['block_id']) ? $input['block_id'] : 0; //仓号ID
         $cage_id = isset($input['cage_id']) ? $input['cage_id'] : 0; //鸽笼ID
-        $survival = isset($input['survival']) ? $input['survival'] : 1; //存栏
+        $survival = isset($input['survival']) ? $input['survival'] : 0; //存栏
 
         $hatch_add = isset($input['hatch_add']) ? $input['hatch_add'] : 0;//孵化转入
         $squab_add = isset($input['squab_add']) ? $input['squab_add'] : 0;//出雏
@@ -112,6 +133,7 @@ class entryData extends Controller
         $hatch_day = isset($input['hatch_day']) ? $input['hatch_day'] : 0;//孵化转入日龄
         $squab_day = isset($input['squab_day']) ? $input['squab_day'] : 0;//出雏日龄
         $nest_day = isset($input['nest_day']) ? $input['nest_day'] : 0;//并窝日龄
+
 
         if($age_day != $hatch_day || $age_day != $squab_day || $age_day != $nest_day)
             return response()->json(['code'=>60000, 'msg'=>'日龄与当前存栏日龄不同',  'data'=>[]]);
@@ -205,37 +227,33 @@ class entryData extends Controller
         if($cage_data['code'] != 20000 ){
             return response()->json($cage_data);
         }
-        if($add_number > 0) {
-            $add_data = $cage_add_model->addSquab($user_id, $hatch_add, $squab_add, $nest_add);
-            if($add_data['code'] != 20000)
-                return response()->json($add_data);
-            //$reduce_num = 0;
-            //$reduce_id = 0;
-            $log_data = $cage_log_model->addLog( $user_id, $cage_id, $category_id,
-                $add_number, $add_data['add_id'], 0, 0, $day_survival);
+        $add_data = $cage_add_model->addSquab($user_id, $hatch_add, $squab_add, $nest_add);
+        if($add_data['code'] != 20000)
+            return response()->json($add_data);
+        $log_data = $cage_log_model->addLog( $user_id, $cage_id, $category_id,
+            $add_number, $add_data['add_id'], 0, 0, $day_survival);
+        if($log_data['code'] != 20000)
+            return response()->json($log_data);
+        $reduce_data = $cage_reduce_model->reduceSquab($user_id, $sick_num, $cull_num, $die_num,
+            $sell_num, $sick_sell_num);
+        if($reduce_data['code'] != 20000)
+            return response()->json($reduce_data);
+        if(!isset($log_data['log_id'])){
+            $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
+                0, 0, $reduce_num, $reduce_data['reduce_id'], $day_survival);
+            if($log_data['code'] != 20000)
+                return response()->json($log_data);
+        }else{
+            $log_data = $cage_log_model->editLog($log_data['log_id'], $user_id, $cage_id, $category_id,
+                $add_number, $add_data['add_id'], $reduce_num, $reduce_data['reduce_id'], $day_survival);
             if($log_data['code'] != 20000)
                 return response()->json($log_data);
         }
-        if($reduce_num > 0) {
-            $reduce_data = $cage_reduce_model->reduceSquab($user_id, $sick_num, $cull_num, $die_num,
-                $sell_num, $sick_sell_num);
-            if($reduce_data['code'] != 20000)
-                return response()->json($reduce_data);
-            //$add_number = 0;
-            //$add_id = 0;
-            if(!isset($log_data['log_id'])){
-                $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
-                    0, 0, $reduce_num, $reduce_data['reduce_id'], $day_survival);
-                if($log_data['code'] != 20000)
-                    return response()->json($log_data);
-            }else{
-                $log_data = $cage_log_model->editLog($log_data['log_id'], $user_id, $cage_id, $category_id,
-                    $add_number, $add_data['add_id'], $reduce_num, $reduce_data['reduce_id'], $day_survival);
-                if($log_data['code'] != 20000)
-                    return response()->json($log_data);
-            }
-
-        }
+        //增加次数表
+        $model_frequency = new Frequency();
+        $frequency_data = $model_frequency->addFrequency($user_id, $cage_id,$category_id, $category_name);
+        if($frequency_data['code'] != 20000)
+            return response()->json($frequency_data);
         DB::commit();
         $return_data = ['code'=>20000,'msg'=>'数据录入成功', 'data'=>[]];
         return response()->json($return_data);
@@ -274,7 +292,7 @@ class entryData extends Controller
         $sick_sell_num = isset($input['sick_sell_num']) ? $input['sick_sell_num'] : 0;//病残销售
         $useless_num = isset($input['useless_num']) ? $input['useless_num'] : 0;//无产能
         $reduce_num = $sick_num + $cull_num + $die_num + $sell_num + $sick_sell_num + $useless_num;
-        if($reduce_num > $survival + $add_number)
+        if($reduce_num > $survival)
             return response()->json(['code'=>60000, 'msg'=>'数据异常，减少数大于存栏数',  'data'=>[]]);
 
         $category_name = '种鸽';
@@ -376,40 +394,41 @@ class entryData extends Controller
             return response()->json($cage_data);
         }
 
-        if($add_number > 0) {
-            $add_data = $cage_add_model->addPigeon($user_id, $buy_add, $breed_add, $buy_in, $nest_add);
-            if($add_data['code'] != 20000)
-                return response()->json($add_data);
-            //$reduce_num = 0;
-            //$reduce_id = 0;
+        $add_data = $cage_add_model->addPigeon($user_id, $buy_add, $breed_add, $buy_in, $nest_add);
+        if($add_data['code'] != 20000)
+            return response()->json($add_data);
+        //$reduce_num = 0;
+        //$reduce_id = 0;
+        $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
+            $add_number, $add_data['add_id'], 0, 0, $day_survival);
+        if($log_data['code'] != 20000)
+            return response()->json($log_data);
+        $reduce_data = $cage_reduce_model->reducePigeon($user_id, $sick_num, $cull_num, $die_num,
+            $sell_num, $sick_sell_num, $useless_num);
+        if($reduce_data['code'] != 20000)
+            return response()->json($reduce_data);
+        //$add_number = 0;
+        //$add_id = 0;
+        if(!isset($log_data['log_id'])){
             $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
-                $add_number, $add_data['add_id'], 0, 0, $day_survival);
+                0, 0, $reduce_num, $reduce_data['reduce_id'], $day_survival);
+            if($log_data['code'] != 20000)
+                return response()->json($log_data);
+        }else{
+            $log_data = $cage_log_model->editLog($log_data['log_id'], $user_id, $cage_id, $category_id,
+                $add_number, $add_data['add_id'], $reduce_num, $reduce_data['reduce_id'], $day_survival);
             if($log_data['code'] != 20000)
                 return response()->json($log_data);
         }
-        if($reduce_num > 0) {
-            $reduce_data = $cage_reduce_model->reducePigeon($user_id, $sick_num, $cull_num, $die_num,
-                $sell_num, $sick_sell_num, $useless_num);
-            if($reduce_data['code'] != 20000)
-                return response()->json($reduce_data);
-            //$add_number = 0;
-            //$add_id = 0;
-            if(!isset($log_data['log_id'])){
-                $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
-                    0, 0, $reduce_num, $reduce_data['reduce_id'], $day_survival);
-                if($log_data['code'] != 20000)
-                    return response()->json($log_data);
-            }else{
-                $log_data = $cage_log_model->editLog($log_data['log_id'], $user_id, $cage_id, $category_id,
-                    $add_number, $add_data['add_id'], $reduce_num, $reduce_data['reduce_id'], $day_survival);
-                if($log_data['code'] != 20000)
-                    return response()->json($log_data);
-            }
 //            $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
 //                0, 0, $reduce_num, $reduce_data['reduce_id']);
 //            if($log_data['code'] != 20000)
 //                return response()->json($log_data);
-        }
+        //增加次数表
+        $model_frequency = new Frequency();
+        $frequency_data = $model_frequency->addFrequency($user_id, $cage_id,$category_id, $category_name);
+        if($frequency_data['code'] != 20000)
+            return response()->json($frequency_data);
         DB::commit();
         $return_data = ['code'=>20000,'msg'=>'数据录入成功', 'data'=>[]];
         return response()->json($return_data);
@@ -431,7 +450,7 @@ class entryData extends Controller
         $factory_id = isset($input['factory_id']) ? $input['factory_id'] : 0; //厂区ID
         $block_id = isset($input['block_id']) ? $input['block_id'] : 0; //仓号ID
         $cage_id = isset($input['cage_id']) ? $input['cage_id'] : 0; //鸽笼ID
-        $survival = isset($input['survival']) ? $input['survival'] : 1; //存栏
+        $survival = isset($input['survival']) ? $input['survival'] : 0; //存栏
 
         $age_day =  isset($input['age_day']) ? $input['age_day'] : 0;//鸽笼日龄
         $breed_day = isset($input['hatch_day']) ? $input['hatch_day'] : 0;//选育日龄
@@ -448,7 +467,7 @@ class entryData extends Controller
         $sick_sell_num = isset($input['sick_sell_num']) ? $input['sick_sell_num'] : 0;//病残销售
         $brood_num = isset($input['brood_num']) ? $input['brood_num'] : 0;//转入育雏室
         $reduce_num = $sick_num + $cull_num + $die_num + $sell_num + $sick_sell_num + $brood_num;
-        if($reduce_num > $survival + $add_number)
+        if($reduce_num > $survival )
             return response()->json(['code'=>60000, 'msg'=>'数据异常，减少数大于存栏数',  'data'=>[]]);
 
         $category_name = '童鸽';
@@ -544,40 +563,44 @@ class entryData extends Controller
             return response()->json($cage_data);
         }
 
-        if($add_number > 0) {
-            $add_data = $cage_add_model->addChild($user_id, $breed_add);
-            if($add_data['code'] != 20000)
-                return response()->json($add_data);
-            //$reduce_num = 0;
-            //$reduce_id = 0;
+        $add_data = $cage_add_model->addChild($user_id, $breed_add);
+        if($add_data['code'] != 20000)
+            return response()->json($add_data);
+        //$reduce_num = 0;
+        //$reduce_id = 0;
+        $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
+            $add_number, $add_data['add_id'], 0, 0, $day_survival);
+        if($log_data['code'] != 20000)
+            return response()->json($log_data);
+
+
+        $reduce_data = $cage_reduce_model->reduceChild($user_id, $sick_num, $cull_num, $die_num,
+            $sell_num, $sick_sell_num, $brood_num);
+        if($reduce_data['code'] != 20000)
+            return response()->json($reduce_data);
+        //$add_number = 0;
+        //$add_id = 0;
+        if(!isset($log_data['log_id'])){
             $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
-                $add_number, $add_data['add_id'], 0, 0, $day_survival);
+                0, 0, $reduce_num, $reduce_data['reduce_id'], $day_survival);
+            if($log_data['code'] != 20000)
+                return response()->json($log_data);
+        }else{
+            $log_data = $cage_log_model->editLog($log_data['log_id'], $user_id, $cage_id, $category_id,
+                $add_number, $add_data['add_id'], $reduce_num, $reduce_data['reduce_id'], $day_survival);
             if($log_data['code'] != 20000)
                 return response()->json($log_data);
         }
-        if($reduce_num > 0) {
-            $reduce_data = $cage_reduce_model->reduceChild($user_id, $sick_num, $cull_num, $die_num,
-                $sell_num, $sick_sell_num, $brood_num);
-            if($reduce_data['code'] != 20000)
-                return response()->json($reduce_data);
-            //$add_number = 0;
-            //$add_id = 0;
-            if(!isset($log_data['log_id'])){
-                $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
-                    0, 0, $reduce_num, $reduce_data['reduce_id'], $day_survival);
-                if($log_data['code'] != 20000)
-                    return response()->json($log_data);
-            }else{
-                $log_data = $cage_log_model->editLog($log_data['log_id'], $user_id, $cage_id, $category_id,
-                    $add_number, $add_data['add_id'], $reduce_num, $reduce_data['reduce_id'], $day_survival);
-                if($log_data['code'] != 20000)
-                    return response()->json($log_data);
-            }
 //            $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
 //                0, 0, $reduce_num, $reduce_data['reduce_id']);
 //            if($log_data['code'] != 20000)
 //                return response()->json($log_data);
-        }
+
+        //增加次数表
+        $model_frequency = new Frequency();
+        $frequency_data = $model_frequency->addFrequency($user_id, $cage_id,$category_id, $category_name);
+        if($frequency_data['code'] != 20000)
+            return response()->json($frequency_data);
         DB::commit();
         $return_data = ['code'=>20000,'msg'=>'数据录入成功', 'data'=>[]];
         return response()->json($return_data);
@@ -599,7 +622,7 @@ class entryData extends Controller
         $factory_id = isset($input['factory_id']) ? $input['factory_id'] : 0; //厂区ID
         $block_id = isset($input['block_id']) ? $input['block_id'] : 0; //仓号ID
         $cage_id = isset($input['cage_id']) ? $input['cage_id'] : 0; //鸽笼ID
-        $survival = isset($input['survival']) ? $input['survival'] : 1; //存栏
+        $survival = isset($input['survival']) ? $input['survival'] : 0; //存栏
         $age_day =  isset($input['age_day']) ? $input['age_day'] : 0;//鸽笼日龄
         $yield_add = isset($input['yield_add']) ? $input['yield_add'] : 0;//生产仓转入
         $add_number = $yield_add;
@@ -611,7 +634,7 @@ class entryData extends Controller
         $sick_sell_num = isset($input['sick_sell_num']) ? $input['sick_sell_num'] : 0;//病残销售
         $brood_num = isset($input['brood_num']) ? $input['brood_num'] : 0;//转入育雏室
         $reduce_num = $sick_num + $cull_num + $die_num + $sell_num + $sick_sell_num + $brood_num;
-        if($reduce_num > $survival + $add_number)
+        if($reduce_num > $survival)
             return response()->json(['code'=>60000, 'msg'=>'数据异常，减少数大于存栏数',  'data'=>[]]);
 
         $category_name = '童鸽';
@@ -707,36 +730,37 @@ class entryData extends Controller
             return response()->json($cage_data);
         }
 
-        if($add_number > 0) {
-            $add_data = $cage_add_model->addChild($user_id, $yield_add);
-            if($add_data['code'] != 20000)
-                return response()->json($add_data);
-            //$reduce_num = 0;
-            //$reduce_id = 0;
+        $add_data = $cage_add_model->addChild($user_id, $yield_add);
+        if($add_data['code'] != 20000)
+            return response()->json($add_data);
+        //$reduce_num = 0;
+        //$reduce_id = 0;
+        $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
+            $add_number, $add_data['add_id'], 0, 0, $day_survival);
+        if($log_data['code'] != 20000)
+            return response()->json($log_data);
+        $reduce_data = $cage_reduce_model->reduceChild($user_id, $sick_num, $cull_num, $die_num,
+            $sell_num, $sick_sell_num, $brood_num);
+        if($reduce_data['code'] != 20000)
+            return response()->json($reduce_data);
+        //$add_number = 0;
+        //$add_id = 0;
+        if(!isset($log_data['log_id'])){
             $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
-                $add_number, $add_data['add_id'], 0, 0, $day_survival);
+                0, 0, $reduce_num, $reduce_data['reduce_id'], $day_survival);
+            if($log_data['code'] != 20000)
+                return response()->json($log_data);
+        }else{
+            $log_data = $cage_log_model->editLog($log_data['log_id'], $user_id, $cage_id, $category_id,
+                $add_number, $add_data['add_id'], $reduce_num, $reduce_data['reduce_id'], $day_survival);
             if($log_data['code'] != 20000)
                 return response()->json($log_data);
         }
-        if($reduce_num > 0) {
-            $reduce_data = $cage_reduce_model->reduceChild($user_id, $sick_num, $cull_num, $die_num,
-                $sell_num, $sick_sell_num, $brood_num);
-            if($reduce_data['code'] != 20000)
-                return response()->json($reduce_data);
-            //$add_number = 0;
-            //$add_id = 0;
-            if(!isset($log_data['log_id'])){
-                $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
-                    0, 0, $reduce_num, $reduce_data['reduce_id'], $day_survival);
-                if($log_data['code'] != 20000)
-                    return response()->json($log_data);
-            }else{
-                $log_data = $cage_log_model->editLog($log_data['log_id'], $user_id, $cage_id, $category_id,
-                    $add_number, $add_data['add_id'], $reduce_num, $reduce_data['reduce_id'], $day_survival);
-                if($log_data['code'] != 20000)
-                    return response()->json($log_data);
-            }
-        }
+        //增加次数表
+        $model_frequency = new Frequency();
+        $frequency_data = $model_frequency->addFrequency($user_id, $cage_id,$category_id, $category_name);
+        if($frequency_data['code'] != 20000)
+            return response()->json($frequency_data);
         DB::commit();
         $return_data = ['code'=>20000,'msg'=>'数据录入成功', 'data'=>[]];
         return response()->json($return_data);
@@ -774,7 +798,7 @@ class entryData extends Controller
         $getout = isset($input['getout']) ? $input['getout'] : 0;//入库
 
         $reduce_num = $damaged_num + $bad_num + $to_num + $imperfect_num + $clear_egg + $sick_num + $sell_num + $getout;
-        if($reduce_num > $survival + $add_number)
+        if($reduce_num > $survival)
             return response()->json(['code'=>60000, 'msg'=>'数据异常，减少数大于存栏数',  'data'=>[]]);
 
         $category_name = '鸽蛋';
@@ -833,40 +857,41 @@ class entryData extends Controller
             return response()->json($cage_data);
         }
 
-        if($add_number > 0) {
-            $add_data = $cage_add_model->addEgg($user_id, $egg_add, $spell_add);
-            if($add_data['code'] != 20000)
-                return response()->json($add_data);
+        $add_data = $cage_add_model->addEgg($user_id, $egg_add, $spell_add);
+        if($add_data['code'] != 20000)
+            return response()->json($add_data);
+        $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
+            $add_number, $add_data['add_id'], 0, 0, $day_survival);
+        if($log_data['code'] != 20000)
+            return response()->json($log_data);
+
+        $reduce_data = $cage_reduce_model->reduceEgg($user_id, $damaged_num, $bad_num, $to_num,
+            $imperfect_num, $clear_egg, $sick_num, $sell_num, $getout);
+        if($reduce_data['code'] != 20000)
+            return response()->json($reduce_data);
+        //$add_number = 0;
+        //$add_id = 0;
+        if(!isset($log_data['log_id'])){
             $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
-                $add_number, $add_data['add_id'], 0, 0, $day_survival);
+                0, 0, $reduce_num, $reduce_data['reduce_id'],$day_survival);
+            if($log_data['code'] != 20000)
+                return response()->json($log_data);
+        }else{
+            $log_data = $cage_log_model->editLog($log_data['log_id'], $user_id, $cage_id, $category_id,
+                $add_number, $add_data['add_id'], $reduce_num, $reduce_data['reduce_id'], $day_survival);
             if($log_data['code'] != 20000)
                 return response()->json($log_data);
         }
-        if($reduce_num > 0) {
-
-            $reduce_data = $cage_reduce_model->reduceEgg($user_id, $damaged_num, $bad_num, $to_num,
-                $imperfect_num, $clear_egg, $sick_num, $sell_num, $getout);
-            if($reduce_data['code'] != 20000)
-                return response()->json($reduce_data);
-            //$add_number = 0;
-            //$add_id = 0;
-            if(!isset($log_data['log_id'])){
-                $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
-                    0, 0, $reduce_num, $reduce_data['reduce_id'],$day_survival);
-                if($log_data['code'] != 20000)
-                    return response()->json($log_data);
-            }else{
-                $log_data = $cage_log_model->editLog($log_data['log_id'], $user_id, $cage_id, $category_id,
-                    $add_number, $add_data['add_id'], $reduce_num, $reduce_data['reduce_id'], $day_survival);
-                if($log_data['code'] != 20000)
-                    return response()->json($log_data);
-            }
 
 //            $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
 //                0, 0, $reduce_num, $reduce_data['reduce_id']);
 //            if($log_data['code'] != 20000)
 //                return response()->json($log_data);
-        }
+        //增加次数表
+        $model_frequency = new Frequency();
+        $frequency_data = $model_frequency->addFrequency($user_id, $cage_id,$category_id, $category_name);
+        if($frequency_data['code'] != 20000)
+            return response()->json($frequency_data);
         DB::commit();
         $return_data = ['code'=>20000,'msg'=>'数据录入成功', 'data'=>[]];
         return response()->json($return_data);
@@ -890,7 +915,7 @@ class entryData extends Controller
         $cage_model = new Cage();
         $cage_id = $cage_model->getCageID($block_id);//鸽笼ID
         if(empty($cage_id)) return response()->json(['code'=>40000, 'msg'=>'数据异常, 录入失败',  'data'=>[]]);
-        $survival = isset($input['survival']) ? $input['survival'] : 1;  //存栏
+        $survival = isset($input['survival']) ? $input['survival'] : 0;  //存栏
 
         $brood_add = isset($input['brood_add']) ? $input['brood_add'] : 0;//育雏仓转入
         $switch_add = isset($input['switch_add']) ? $input['switch_add'] : 0;//转仓
@@ -911,7 +936,7 @@ class entryData extends Controller
         $sell_num = isset($input['sell_num']) ? $input['sell_num'] : 0;//出售
         $yield_num = isset($input['yield_num']) ? $input['yield_num'] : 0;//补入生产仓
         $reduce_num = $sick_num + $cull_num + $die_num + $sell_num + $yield_num;
-        if($reduce_num > $survival + $add_number)
+        if($reduce_num > $survival)
             return response()->json(['code'=>60000, 'msg'=>'数据异常，减少数大于存栏数',  'data'=>[]]);
 
         $category_name = '青年鸽';
@@ -1005,40 +1030,41 @@ class entryData extends Controller
         if($cage_data['code'] != 20000 ){
             return response()->json($cage_data);
         }
-        if($add_number > 0) {
-            $add_data = $cage_add_model->addYouth($user_id, $brood_add, $switch_add, $yield_add);
-            if($add_data['code'] != 20000)
-                return response()->json($add_data);
-            //$reduce_num = 0;
-            //$reduce_id = 0;
+        $add_data = $cage_add_model->addYouth($user_id, $brood_add, $switch_add, $yield_add);
+        if($add_data['code'] != 20000)
+            return response()->json($add_data);
+        //$reduce_num = 0;
+        //$reduce_id = 0;
+        $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
+            $add_number, $add_data['add_id'], 0, 0, $day_survival);
+        if($log_data['code'] != 20000)
+            return response()->json($log_data);
+        $reduce_data = $cage_reduce_model->reduceYouth($user_id, $sick_num, $cull_num, $die_num,
+            $sell_num, $yield_num);
+        if($reduce_data['code'] != 20000)
+            return response()->json($reduce_data);
+        //$add_number = 0;
+        //$add_id = 0;
+        if(!isset($log_data['log_id'])){
             $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
-                $add_number, $add_data['add_id'], 0, 0, $day_survival);
+                0, 0, $reduce_num, $reduce_data['reduce_id'], $day_survival);
+            if($log_data['code'] != 20000)
+                return response()->json($log_data);
+        }else{
+            $log_data = $cage_log_model->editLog($log_data['log_id'], $user_id, $cage_id, $category_id,
+                $add_number, $add_data['add_id'], $reduce_num, $reduce_data['reduce_id'], $day_survival);
             if($log_data['code'] != 20000)
                 return response()->json($log_data);
         }
-        if($reduce_num > 0) {
-            $reduce_data = $cage_reduce_model->reduceYouth($user_id, $sick_num, $cull_num, $die_num,
-                $sell_num, $yield_num);
-            if($reduce_data['code'] != 20000)
-                return response()->json($reduce_data);
-            //$add_number = 0;
-            //$add_id = 0;
-            if(!isset($log_data['log_id'])){
-                $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
-                    0, 0, $reduce_num, $reduce_data['reduce_id'], $day_survival);
-                if($log_data['code'] != 20000)
-                    return response()->json($log_data);
-            }else{
-                $log_data = $cage_log_model->editLog($log_data['log_id'], $user_id, $cage_id, $category_id,
-                    $add_number, $add_data['add_id'], $reduce_num, $reduce_data['reduce_id'], $day_survival);
-                if($log_data['code'] != 20000)
-                    return response()->json($log_data);
-            }
 //            $log_data = $cage_log_model->addLog($user_id, $cage_id, $category_id,
 //                0, 0, $reduce_num, $reduce_data['reduce_id']);
 //            if($log_data['code'] != 20000)
 //                return response()->json($log_data);
-        }
+        //增加次数表
+        $model_frequency = new Frequency();
+        $frequency_data = $model_frequency->addFrequency($user_id, $cage_id,$category_id, $category_name);
+        if($frequency_data['code'] != 20000)
+            return response()->json($frequency_data);
         DB::commit();
         $return_data = ['code'=>20000,'msg'=>'数据录入成功', 'data'=>[]];
         return response()->json($return_data);
@@ -1185,19 +1211,24 @@ class entryData extends Controller
             $user_data = $user_factory_model->getUsersInfo($v->block_id);
             $exits_breeder = 0;
             $exits_carer = 0;
+            $breeder_id = 0;
+            $breeder_name = '';
+            $carer_id = 0;
+            $carer_name = '';
             foreach ($user_data as  $value){
                 if($value->role_name == '饲养员')
                 {
                     $exits_breeder = 1;
-                    $v->breeder_id = $value->user_id;
-                    $v->breeder_name = $value->user_name;
+                    $breeder_id = $value->user_id;
+                    $breeder_name = $value->user_name;
                 }
                 if($value->role_name == '护工')
                 {
                     $exits_carer = 1;
-                    $v->carer_id = $value->user_id;
-                    $v->carer_name = $value->user_name;
+                    $carer_id = $value->user_id;
+                    $carer_name = $value->user_name;
                 }
+
             }
             if(empty($exits_breeder)){
                 if(isset($user_data[0]))
@@ -1209,23 +1240,17 @@ class entryData extends Controller
                     $v->breeder_name = '';
                 }
             } else{
-                $v->breeder_id = '';
-                $v->breeder_name = '';
+                $v->breeder_id = $breeder_id;
+                $v->breeder_name = $breeder_name;
             }
             if(empty($exits_carer))
             {
-                if(isset($user_data[1]))
-                {
-                    $v->carer_id = $user_data[1]->user_id;
-                    $v->carer_name = $user_data[1]->user_name;
-                }else {
-                    $v->carer_id = '';
-                    $v->carer_name = '';
-                }
+                $v->carer_id = '';
+                $v->carer_name = '';
             }
             else{
-                $v->breeder_id = '';
-                $v->breeder_name = '';
+                $v->carer_id = $carer_id;
+                $v->carer_name = $carer_name;
             }
         }
         $return_data = ['code'=>20000, 'msg'=>'请求成功',  'data'=>$list_data];
@@ -1233,7 +1258,7 @@ class entryData extends Controller
     }
 
     /**
-     * 录入数据列表
+     * 录入数据--修改
      * @param Request $request
      * @return mixed
      */
@@ -1294,12 +1319,16 @@ class entryData extends Controller
         $old_reduce_number = $old_disease + $old_massacre + $old_death + $old_sell + $old_disease_sell + $old_getout + $old_shift_to + $old_dead_eggs + $old_useless;
 
         //鸽笼数据
+        $survival = isset($input['survival']) ? $input['survival'] : 0; //存栏
         $block_id = isset($input['block_id']) ? $input['block_id'] : '';//仓号ID
         $waste = isset($input['waste']) ? $input['waste'] : 0;//废料
         $dung = isset($input['dung']) ? $input['dung'] : 0;//鸽子粪
 
         $old_waste = isset($input['old_waste']) ? $input['old_waste'] : '';//原数据 废料
         $old_dung = isset($input['old_dung']) ? $input['old_dung'] : '';//原数据 鸽子粪
+
+        if($old_reduce_number < $reduce_number && ($reduce_number - $old_reduce_number) > $survival)
+            return response()->json(['code'=>40000, 'msg'=>'减少总数不能大于存栏',  'data'=>[]]);
 
         $cage_model = new Cage();
         $cage_add_model = new CageAdd();

@@ -96,7 +96,7 @@ class CageLog extends Model
      * 获取今天的数据
      * @return mixed
      */
-    public function getDataByTime($usage_y, $usage_m, $usage_d)
+    public function getDaStaByTime($usage_y, $usage_m, $usage_d)
     {
         return DB::table($this->table)
             ->select(DB::raw('dove_cage_log.*, add.hatch, add.brood, add.conesting, add.added_out, add.added_wit, add.breeding, add.replenish,
@@ -149,7 +149,7 @@ class CageLog extends Model
     public function getEntryList($user_id, $type_id, $factory_id, $block_type, $block_id, $date_y, $date_m, $date_d, $page_size)
     {
         $results = DB::table('dove_cage_log as log')
-            ->select(DB::raw('log_id, log.cage_id, log.in_add, log.in_add, log.add_id, log.in_reduce, log.reduce_id, add.hatch, add.brood, add.conesting, add.added_out, add.added_wit, add.breeding, add.replenish,add.spell, reduce.disease, reduce.massacre, reduce.death, reduce.sell, reduce.disease_sell, reduce.getout, reduce.shift_to, reduce.dead_eggs, reduce.useless, block.id as block_id, block.name as block_name, block.block_type as block_type, block.type_name as type_name, cage.pigeon as pigeon, cage.egg as egg, cage.squab as squab, cage.ageday as ageday, cage.child as child, cage.youth as youth, block.waste as waste, block.dung as dung, factory.id as factory_id, factory.name as factory_name'))
+            ->select(DB::raw('log_id, cage.name as cage_name, log.cage_id, log.in_add, log.in_add, log.add_id, log.in_reduce, log.reduce_id, add.hatch, add.brood, add.conesting, add.added_out, add.added_wit, add.breeding, add.replenish,add.spell, reduce.disease, reduce.massacre, reduce.death, reduce.sell, reduce.disease_sell, reduce.getout, reduce.shift_to, reduce.dead_eggs, reduce.useless, block.id as block_id, block.name as block_name, block.block_type as block_type, block.type_name as type_name, cage.pigeon as pigeon, cage.egg as egg, cage.squab as squab, cage.ageday as ageday, cage.child as child, cage.youth as youth, block.waste as waste, block.dung as dung, factory.id as factory_id, factory.name as factory_name'))
             ->leftJoin('dove_cage as cage', 'cage.id', '=', 'log.cage_id')
             ->leftJoin('dove_block as block', 'cage.block_id', '=', 'block.id')
             ->leftJoin('dove_factory as factory', 'factory.id', '=', 'block.factory_id')
@@ -199,18 +199,19 @@ class CageLog extends Model
     /**
      * 获取上月留存留存
      * @param $data_time
-     * @param $cage_id
+     * @param $block_id
      * @param $type_id
      * @return mixed
      */
-    public function getSurvivalByTime($data_time, $cage_id, $type_id)
+    public function getSurvivalByTime($data_time, $block_id, $type_id)
     {
-        $results =  DB::table($this->table)
-            ->select(DB::raw('day_survival'))
-            ->where('cage_id', $cage_id)
+        $results =  DB::table('dove_cage_log as log')
+            ->select(DB::raw('sum(day_survival) as day_survival'))
+            ->leftJoin('dove_cage as cage', 'cage.id', '=', 'log.cage_id')
+            ->leftJoin('dove_block as block', 'cage.block_id', '=', 'block.id')
+            ->where('cage.block_id', $block_id)
             ->where('type_id', $type_id)
             ->where('creatime', '<', $data_time)
-            ->orderBy('creatime', 'desc')
             ->first();
         return isset($results->day_survival) ? $results->day_survival : 0;
     }
@@ -221,13 +222,14 @@ class CageLog extends Model
      * @param $factory_id
      * @param $block_type
      * @param $block_id
+     * @param $firm_id
      * 获取数据列表
      * @return mixed
      */
-    public function getStatementList($start_time, $end_time, $factory_id, $block_type, $block_id)
+    public function getStatementList($start_time, $end_time, $factory_id, $block_type, $block_id, $firm_id)
     {
         $results = DB::table('dove_cage_log as log')
-            ->select(DB::raw("log_id, log.cage_id, log.type_id, type.alias, log.day_survival, log.in_add, log.in_reduce, cage.block_id, cage.pigeon, cage.egg, cage.squab, cage.child, cage.youth, add.hatch, add.brood, add.conesting, add.added_out, add.added_wit, add.breeding, add.replenish, add.spell, reduce.disease, reduce.massacre, reduce.death, reduce.sell, reduce.disease_sell, reduce.getout, reduce.shift_to, reduce.dead_eggs, reduce.useless, block.id as block_id, block.name as block_name, factory.id as factory_id, factory.name as factory_name, FROM_UNIXTIME(log.creatime, '%Y-%m-%d') as log_time"))
+            ->select(DB::raw("log_id, cage.name as cage_name, log.cage_id, log.type_id, type.alias, log.day_survival, log.in_add, log.in_reduce, cage.block_id, cage.pigeon, cage.egg, cage.squab, cage.child, cage.youth, add.hatch, add.brood, add.conesting, add.added_out, add.added_wit, add.breeding, add.replenish, add.spell, reduce.disease, reduce.massacre, reduce.death, reduce.sell, reduce.disease_sell, reduce.getout, reduce.shift_to, reduce.dead_eggs, reduce.useless, block.id as block_id, block.name as block_name, block.type_name as type_name, block.type_name as type_name, factory.id as factory_id, factory.name as factory_name, FROM_UNIXTIME(log.creatime, '%Y-%m-%d') as log_time"))
             ->leftJoin('dove_cage as cage', 'cage.id', '=', 'log.cage_id')
             ->leftJoin('dove_block as block', 'cage.block_id', '=', 'block.id')
             ->leftJoin('dove_factory as factory', 'factory.id', '=', 'block.factory_id')
@@ -235,6 +237,7 @@ class CageLog extends Model
             ->leftJoin('dove_defusing_type as type', 'type.type_id', '=', 'log.type_id')
             ->leftJoin('dove_cage_reduce as reduce', 'log.reduce_id', '=', 'reduce.reduce_id');
         if($start_time && $end_time){
+            $end_time = $start_time + 86400;
             $results = $results->whereBetween('log.creatime', [$start_time, $end_time]);
         }elseif($start_time && empty($end_time))
         {
@@ -245,6 +248,8 @@ class CageLog extends Model
             $start_time = $end_time - 86400;
             $results = $results->where('log.creatime', [$start_time, $end_time]);
         }
+        if($firm_id)
+            $results =  $results->where('factory.firm_id', $firm_id);
         if($factory_id)
             $results =  $results->where('factory.id', $factory_id);
         if($block_type)
@@ -263,14 +268,15 @@ class CageLog extends Model
      * @param $factory_id
      * @param $block_type
      * @param $block_id
+     * @param $firm_id
      * @param $type_id
      * 获取数据列表
      * @return mixed
      */
-    public function getStatementListByType($start_time, $end_time, $factory_id, $block_type, $block_id, $type_id)
+    public function getStatementListByType($start_time, $end_time, $factory_id, $block_type, $block_id, $firm_id, $type_id)
     {
         $results = DB::table('dove_cage_log as log')
-            ->select(DB::raw("log_id, log.cage_id, log.type_id, type.alias, log.day_survival, log.in_add, log.in_reduce, cage.block_id, cage.pigeon, cage.egg, cage.squab, cage.child, cage.youth, add.hatch, add.brood, add.conesting, add.added_out, add.added_wit, add.breeding, add.replenish, add.spell, reduce.disease, reduce.massacre, reduce.death, reduce.sell, reduce.disease_sell, reduce.getout, reduce.shift_to, reduce.dead_eggs, reduce.useless, block.id as block_id, block.name as block_name, factory.id as factory_id, factory.name as factory_name, FROM_UNIXTIME(log.creatime, '%Y-%m-%d') as log_time"))
+            ->select(DB::raw("log_id, cage.name as cage_name, log.cage_id, log.type_id, type.alias, log.day_survival, log.in_add, log.in_reduce, cage.block_id, cage.pigeon, cage.egg, cage.squab, cage.child, cage.youth, add.hatch, add.brood, add.conesting, add.added_out, add.added_wit, add.breeding, add.replenish, add.spell, reduce.disease, reduce.massacre, reduce.death, reduce.sell, reduce.disease_sell, reduce.getout, reduce.shift_to, reduce.dead_eggs, reduce.useless, block.id as block_id, block.name as block_name, block.type_name as type_name, factory.id as factory_id, factory.name as factory_name, FROM_UNIXTIME(log.creatime, '%Y-%m-%d') as log_time"))
             ->leftJoin('dove_cage as cage', 'cage.id', '=', 'log.cage_id')
             ->leftJoin('dove_block as block', 'cage.block_id', '=', 'block.id')
             ->leftJoin('dove_factory as factory', 'factory.id', '=', 'block.factory_id')
@@ -288,6 +294,8 @@ class CageLog extends Model
             $start_time = $end_time - 86400;
             $results = $results->where('log.creatime', [$start_time, $end_time]);
         }
+        if($firm_id)
+            $results =  $results->where('factory.firm_id', $firm_id);
         if($factory_id)
             $results =  $results->where('factory.id', $factory_id);
         if($block_type)
@@ -300,5 +308,98 @@ class CageLog extends Model
             //->orderBy('type_id','desc')
             ->get();
         return  $results;
+    }
+
+    /**
+     * 根据ID判断该鸽笼鸽子类型今日是否已经录入数据
+     * @param $cage_id
+     * @param $type_id
+     * @param $date_y
+     * @param $date_m
+     * @param $date_d
+     * @return mixed
+     */
+    public function existsLog($cage_id, $type_id, $date_y, $date_m, $date_d)
+    {
+        return DB::table($this->table)
+            ->where('cage_id', $cage_id)
+            ->where('type_id', $type_id)
+            ->where('usage_y', $date_y)
+            ->where('usage_m', $date_m)
+            ->where('usage_d', $date_d)
+            ->exists();
+    }
+
+    /**
+     * @param $firm_id
+     * @param $data_y
+     * @param $data_m
+     * @param $data_d
+     * 查询存栏
+     * @return mixed
+     */
+    public function getAmount($firm_id, $data_y, $data_m, $data_d)
+    {
+        return $result = DB::table('dove_cage_log as cage_log')
+            ->select(DB::raw('sum(cage_log.in_add) as sum_add, sum(cage_log.in_reduce) as sum_reduce'))
+            ->leftJoin('dove_cage as cage', 'cage.id', '=', 'cage_log.cage_id')
+            ->leftJoin('dove_block as block', 'block.id', '=', 'cage.block_id')
+            ->leftJoin('dove_factory as factory', 'factory.id', '=', 'block.factory_id')
+            ->where("factory.firm_id",$firm_id)
+            ->where('cage_log.usage_y', $data_y)
+            ->where('cage_log.usage_m', $data_m)
+            ->where('cage_log.usage_d', $data_d)
+            ->first();
+    }
+
+    /**
+     * @param $firm_id
+     * @param $data_y
+     * @param $data_m
+     * @param $data_d
+     * 查询死亡率
+     * @return mixed
+     */
+    public function getDeath($firm_id, $data_y, $data_m, $data_d)
+    {
+        return $result = DB::table('dove_cage_log as cage_log')
+            ->select(DB::raw('factory.id as factory_id, factory.name as factory_name, sum(cage_log.day_survival) as sum_amount, sum(reduce.death) as sum_death, CONCAT(CAST(round((sum(reduce.death)/sum(cage_log.day_survival))*100,3) AS CHAR),\'%\') as death_rate'))
+            ->leftJoin('dove_cage_reduce as reduce', 'reduce.reduce_id', '=', 'cage_log.reduce_id')
+            ->leftJoin('dove_cage as cage', 'cage.id', '=', 'cage_log.cage_id')
+            ->leftJoin('dove_block as block', 'block.id', '=', 'cage.block_id')
+            ->leftJoin('dove_factory as factory', 'factory.id', '=', 'block.factory_id')
+            ->where('factory.firm_id',$firm_id)
+            ->where('cage_log.usage_y', $data_y)
+            ->where('cage_log.usage_m', $data_m)
+            ->where('cage_log.usage_d', $data_d)
+            ->groupBy('factory.id')
+            ->orderBy('death_rate', 'asc')
+            ->limit(5)
+            ->get();
+    }
+    /**
+     * @param $firm_id
+     * @param $data_y
+     * @param $data_m
+     * @param $data_d
+     * 查询病残率
+     * @return mixed
+     */
+    public function getDisease($firm_id, $data_y, $data_m, $data_d)
+    {
+        return $result = DB::table('dove_cage_log as cage_log')
+            ->select(DB::raw('factory.id as factory_id, factory.name as factory_name, sum(cage_log.day_survival) as sum_amount, sum(reduce.disease) as sum_disease, CONCAT(CAST(round((sum(reduce.disease)/sum(cage_log.day_survival))*100,3) AS CHAR),\'%\') as disease_rate'))
+            ->leftJoin('dove_cage_reduce as reduce', 'reduce.reduce_id', '=', 'cage_log.reduce_id')
+            ->leftJoin('dove_cage as cage', 'cage.id', '=', 'cage_log.cage_id')
+            ->leftJoin('dove_block as block', 'block.id', '=', 'cage.block_id')
+            ->leftJoin('dove_factory as factory', 'factory.id', '=', 'block.factory_id')
+            ->where('factory.firm_id',$firm_id)
+            ->where('cage_log.usage_y', $data_y)
+            ->where('cage_log.usage_m', $data_m)
+            ->where('cage_log.usage_d', $data_d)
+            ->groupBy('factory.id')
+            ->orderBy('disease_rate', 'asc')
+            ->limit(5)
+            ->get();
     }
 }

@@ -54,7 +54,6 @@ class Firm extends Model
     {
         $results = DB::table($this->table)
             ->select(DB::raw('id, name, icon, show_status'))
-            ->where('data_status', self::NORMAL)
             ->paginate($page_size);
         $data = [
             'total'=>$results->total(),
@@ -107,6 +106,7 @@ class Firm extends Model
                     'name' => $firm_name,
                     'icon' => $firm_icon,
                     'data_status'=>self::NORMAL,
+                    'show_status'=>self::NORMAL,
                     'updated_time' => time(),
                     'created_time' => time(),
                 ];
@@ -164,6 +164,7 @@ class Firm extends Model
         try{
             $updateArray = [
                 'show_status' => $show_status,
+                'data_status' => $show_status,
                 'updated_time' => time(),
             ];
             $id = DB::table($this->table)
@@ -209,6 +210,20 @@ class Firm extends Model
     {
         return DB::table($this->table)
             ->where('name', $firm_name)
+            ->where('data_status', self::NORMAL)
+            ->exists();
+    }
+
+    /**
+     * 通过企业ID判断企业是否存在
+     * @param $firm_id
+     * @return mixed
+     */
+    public function existsFirmById($firm_id)
+    {
+        return DB::table($this->table)
+            ->where('id', $firm_id)
+            ->where('show_status', self::NORMAL)
             ->where('data_status', self::NORMAL)
             ->exists();
     }

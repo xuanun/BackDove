@@ -157,10 +157,10 @@ class DoveRolesController extends Controller
             if (empty($per_ids)) return response()->json(['code' => 30000, 'msg' => '没有权限访问', 'data' => ['权限ID不存在']]);
             //获取权限菜单
             $results_data = $model_permissions->getPermissionsInfo($per_ids);
+            $results_data = $model_permissions->getAllPer();
         }else{
             $results_data = $model_permissions->getAllPer();
         }
-
         $p_id_array = array();
         foreach ($results_data as $v)
         {
@@ -182,14 +182,16 @@ class DoveRolesController extends Controller
                 }
             }
         }
-        //return $data;
-        $array = $data[0]['list'];
+        $array = array();
+        if(isset($data[0]['list']))
+            $array = $data[0]['list'];
+        else
+            return response()->json(['code' => 40000, 'msg' => '权限菜单为空', 'data' => []]);
         for($i=0; $i<count($array); $i++)
         {
             //return $data[$array[$i]['id']];
              $array[$i]['list'] = isset($data[$array[$i]['id']]['list']) ? $data[$array[$i]['id']]['list'] : [];
         }
-
         $return_data = ['code'=>20000,'msg'=>'', 'data'=>$array];
         return  response()->json($return_data);
 //        foreach ($results_data as $value)
@@ -280,7 +282,7 @@ class DoveRolesController extends Controller
         $firm_id = $request->header('firm_id');
 
         $model_permissions = new Permissions();
-        $exits_path = $model_permissions->exitsUrlPath($url_path, $firm_id);
+        $exits_path = $model_permissions->exitsUrlPath($url_path);
         if($exits_path) return response()->json(['code'=>40000,'msg'=>'菜单权限已经存在, 添加失败', 'data'=>[]]);
         $return_data = $model_permissions->addPermission($p_id, $name, $url_path);
         return  response()->json($return_data);
@@ -324,4 +326,21 @@ class DoveRolesController extends Controller
         return  response()->json($return_data);
     }
 
+    /**
+     * 角色权限菜单
+     * @param Request $request
+     * @return mixed
+     */
+    public function rolePermissionsMenu(Request $request)
+    {
+        $input = $request->all();
+        $role_id= isset($input['role_id']) ? $input['role_id'] : '';
+        if(empty($role_id))
+            return  response()->json(['code'=>60000,'msg'=>'参数错误, 缺少角色ID', 'data'=>[]]);
+
+        $model_role_permissions = new RolePermissions();
+        $per_data = $model_role_permissions->getPerIdByRoleId($role_id);
+        $return_data = ['code'=>20000,'msg'=>'请求成功', 'data'=>$per_data];
+        return  response()->json($return_data);
+    }
 }

@@ -9,7 +9,7 @@ class Factory extends Model
 {
     protected $table = "dove_factory";
     /**
-     * 查询管理员列表基本信息
+     * 查询所有厂区基本信息
      * @param $firm_id
      * @return mixed
      */
@@ -47,7 +47,7 @@ class Factory extends Model
             return $return;
         }else{
             DB::rollBack();
-            return ['code'=>40000,'msg'=>'名字已经存在', 'data'=>[]];
+            return ['code'=>40000,'msg'=>'已有该厂区', 'data'=>[]];
         }
 
     }

@@ -62,11 +62,22 @@ class Items extends Model
      */
     public function getItemsByType($type_id, $firm_id)
     {
-        return $results = DB::table($this->table)
-            ->select(DB::raw('id, item_name'))
-            ->where('type_id', $type_id)
-            ->where('firm_id', $firm_id)
-            ->get();
+        if($type_id != 5 ){
+            $results = DB::table($this->table)
+                ->select(DB::raw('id, item_name'))
+                ->where('type_id', $type_id)
+                ->where('firm_id', $firm_id)
+                ->get();
+        }else
+        {
+            $results = DB::table($this->table)
+                ->select(DB::raw('id, item_name'))
+                ->where('type_id', 1)
+                ->orWhere('type_id', 2)
+                ->where('firm_id', $firm_id)
+                ->get();
+        }
+        return $results;
     }
 
 
@@ -107,7 +118,7 @@ class Items extends Model
                 $return = ['code'=>40000,'msg'=>'新增失败', 'data'=>[$e->getMessage()]];
             }
         }else{
-            $return = ['code'=>40004,'msg'=>'新增失败', 'data'=>['物品名字已经存在']];
+            $return = ['code'=>40004,'msg'=>'新增失败,物品名字已经存在', 'data'=>['']];
         }
         DB::commit();
         return $return;

@@ -35,19 +35,29 @@ class GrainLog extends Model
             $results = $results->where('item.id',$item_id);
         $results = $results
             ->where('type',$type_id)
-            ->orderBy('grain_id','desc')
-            ->paginate($page_size);
+            ->orderBy('grain_id','desc');
+        if($page_size)
+        {
+            $results = $results->paginate($page_size);
+            $data = [
+                'total'=>$results->total(),
+                'currentPage'=>$results->currentPage(),
+                'pageSize'=>$page_size,
+                'list'=>[]
+            ];
 
-        $data = [
-            'total'=>$results->total(),
-            'currentPage'=>$results->currentPage(),
-            'pageSize'=>$page_size,
-            'list'=>[]
-        ];
-        foreach($results as $v){
-            $data['list'][] = $v;
+            foreach($results as $v){
+                $data['list'][] = $v;
+            }
+            return  $data;
+        }else{
+            $results = $results->get();
+            $data['list'] = [];
+            foreach($results as $v){
+                $data['list'][] = $v;
+            }
+            return  $data;
         }
-        return  $data;
     }
 
     /**
@@ -61,6 +71,7 @@ class GrainLog extends Model
      * @param $production
      * @param $number
      * @param $unit_price
+     * @param $unit
      * @param $price
      * @param $supplier
      * @param $examiner
@@ -72,7 +83,7 @@ class GrainLog extends Model
      * @param $return_time
      * @return mixed
      */
-    public function editFood($id, $user_id, $date_time, $factory_id, $item_id, $goods_name, $production, $number, $unit_price, $price, $supplier, $examiner, $manager, $type_id, $reason, $borrowing, $remarks, $return_time)
+    public function editFood($id, $user_id, $date_time, $factory_id, $item_id, $goods_name, $production, $number, $unit_price, $unit, $price, $supplier, $examiner, $manager, $type_id, $reason, $borrowing, $remarks, $return_time)
     {
         try{
             $updateArray = [
@@ -84,6 +95,7 @@ class GrainLog extends Model
                 'production' => $production,
                 'number' => $number,
                 'unit_price' => $unit_price,
+                'unit'=> $unit,
                 'price' => $price,
                 'supplier' => $supplier,
                 'examiner' => $examiner,
@@ -187,5 +199,18 @@ class GrainLog extends Model
         }
         DB::commit();
         return $return;
+    }
+
+    /**
+     * @param $id
+     * 查询数据详情
+     * @return mixed
+     */
+    public function getInfo($id)
+    {
+        return $results =  DB::table($this->table)
+            ->select(DB::raw('uid, record_time, factory_id, item_id, grain_name, production, number, unit_price, price, supplier, examiner, type, manager, reason, borrowing, remarks, unit'))
+            ->where('grain_id', $id)
+            ->first();
     }
 }

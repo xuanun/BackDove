@@ -28,7 +28,6 @@ $router->group(['prefix' => 'user'], function () use ($router) {
         //$router->post("/admin_list",'power\DoveRolesController@adminList'); //管理员列表
         $router->post("/user_list",'user\UserController@userList'); //人员列表
         $router->post("/get_all_users",'user\UserController@getUsers'); //通过条件筛选用户
-
         $router->post("/all_factory", 'user\UserController@getAllFactory');//所有厂区
         $router->post("/block_type", 'user\UserController@getBlockType');//获取工厂内未分配的仓号类型
         $router->post("/blocks", 'user\UserController@getBlockIds');//获取工厂内未分配的仓号
@@ -36,6 +35,7 @@ $router->group(['prefix' => 'user'], function () use ($router) {
         $router->post("/edit_avatar", 'account\AccountController@editAvatar');//修改头像
         $router->post("/all_cages", 'user\UserController@getAllCages');//获取仓号下所有鸽笼ID
         $router->post("/all_blocks", 'user\UserController@getAllBlocks');//获取所有仓号以及全部鸽笼ID
+        $router->post("/user_all_blocks", 'user\UserController@UserAllBlocks');//根据人员获取全部厂区仓号鸽笼
 
         $router->post("/add_user", 'user\UserController@addUser');//人员管理--添加
         $router->post("/edit_user", 'user\UserController@editUser');//人员管理--编辑
@@ -85,9 +85,6 @@ $router->group(['prefix' => 'user'], function () use ($router) {
         $router->post("/del_item", 'platform\PlatformController@delItem');//物品删除
         $router->post("/early_list", 'platform\PlatformController@earlyList');//预警列表
         $router->post("/edit_early", 'platform\PlatformController@editEarly');//预警编辑
-        $router->post("/edit_firm_user", 'platform\PlatformController@editFirmUser');//编辑管理员
-        $router->post("/del_firm", 'platform\PlatformController@delPlatform');//删除企业
-        $router->post("/edit_firm_status", 'platform\PlatformController@editFirmStatus');//修改企业状态
         $router->post("/get_users", 'platform\PlatformController@getUsers');//获取企业下所有人员
 
 
@@ -98,6 +95,7 @@ $router->group(['prefix' => 'user'], function () use ($router) {
         $router->post("/warehouse_add_cages", 'platform\PlatformController@warehouseAddCages');//新建鸽笼多条
         $router->post("/warehouse_type", 'platform\PlatformController@warehouseType');//全部仓号类型
         $router->post("/warehouse_edit", 'platform\PlatformController@editWarehouse');//修改鸽笼绑定仓号
+        $router->post("/check_name", 'platform\PlatformController@checkFactoryName');//验证厂区名字是否已经存在
 
         $router->post("/cage_info", 'entry\entryData@getCageInfo');//查询鸽笼信息
         $router->post("/squab_data", 'entry\entryData@squabData');//录入乳鸽数据
@@ -117,6 +115,7 @@ $router->group(['prefix' => 'user'], function () use ($router) {
         $router->post("/add_message", 'message\MessageController@addMessage');//新增消息
         $router->post("/del_message", 'message\MessageController@delMessage');//删除消息
         $router->post("/batch_del_message", 'message\MessageController@batchDelMessage');//批量删除消息
+        $router->post("/edit_message", 'message\MessageController@editMessage');//修改消息
 
         $router->post("/get_data", 'agenda\AgendaController@getAllData');//无害化处理 查询数据
         $router->post("/entry_harmless", 'agenda\AgendaController@entryHarmless');//无害化处理 录入数据
@@ -182,6 +181,7 @@ $router->group(['prefix' => 'user'], function () use ($router) {
         $router->post("/edit_state", 'agenda\AgendaController@editRuleState');//考勤--上下班时间启用禁用
         $router->post("/del_rule", 'agenda\AgendaController@delRule');//考勤--上下班时间删除
         $router->post("/add_range", 'agenda\AgendaController@addRange');//考勤--打卡地点
+        $router->post("/get_range", 'agenda\AgendaController@getRuleRange');//考勤--获取打卡地点
 
         $router->post("/data_all_list", 'StatisticsController@dataStatement');//数据统计
         $router->post("/data_brood", 'StatisticsController@dataBrood');//数据统计--育雏仓
@@ -190,14 +190,31 @@ $router->group(['prefix' => 'user'], function () use ($router) {
 
     });
     //uploadFirmImage
+    $router->post("/edit_firm_user", 'platform\PlatformController@editFirmUser');//编辑管理员
+    $router->post("/edit_firm_status", 'platform\PlatformController@editFirmStatus');//修改企业状态
+    $router->post("/del_firm", 'platform\PlatformController@delPlatform');//删除企业
     $router->post("/login", 'account\AccountController@login');//用户登录
     $router->post("/platform_info", 'platform\PlatformController@platFormInfo');//平台设置
+    $router->post("/firm_avatar", 'platform\PlatformController@uploadAvatar');//上传企业头像
     $router->post("/add_firm_user", 'platform\PlatformController@addFirmUser');//新增平台管理员
     $router->post("/firm_image", 'platform\PlatformController@uploadFirmImage');//上传管理员头像
     $router->post("/get_initial_password", 'platform\PlatformController@getInitialPassword');//获取初始密码
     $router->post("/edit_initial_password", 'platform\PlatformController@editInitialPassword');//修改初始密码
     $router->post("/firm_info", 'account\AccountController@firmInfo');//获取企业信息
     $router->post("/all_firm", 'IndexController@allFirm');//企业切换-全部企业
+    $router->post("/role_per", 'power\DoveRolesController@rolePermissionsMenu'); //角色权限菜单
 
 });
+$router->group(['prefix' => 'index'], function () use ($router) {
+    $router->post("/all_data", 'IndexDataController@AllData'); //首页数据
+});
 
+$router->group(['prefix' => 'per'], function () use ($router) {
+    $router->post("/user_menu", 'account\AccountController@checkUserMenu'); //首页数据
+});
+
+$router->group(['prefix' => 'external'], function () use ($router) {
+    $router->post("/all_data", 'external\ExternalController@allData'); //外部调用首页数据
+    $router->post("/report_data", 'external\ExternalController@reportData'); //外部调用生产报表
+    $router->post("/all_factory", 'external\ExternalController@allFactory'); //外部调用全部厂区
+});

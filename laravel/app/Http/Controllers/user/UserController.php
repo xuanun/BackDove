@@ -31,10 +31,11 @@ class UserController extends Controller
         $page =  isset($input['page']) ? $input['page'] : 10;
         //$firm_id = $request->header('firmId');
         $firm_id = isset($input['firm_id']) ? $input['firm_id'] : '';
-        if(empty($firm_id)) return  response()->json(['code'=>60000,'msg'=>'参数错误', 'data'=>['缺少参数,企业ID']]);
+        if(empty($firm_id)) return  response()->json(['code'=>60000,'msg'=>'参数错误,缺少参数,企业ID', 'data'=>['']]);
 
         $model_user = new User();
-        $user_list = $model_user->getUserList($page_size, $firm_id);
+        //$user_list = $model_user->getUserList($page_size, $firm_id);
+        $user_list = $model_user->getAllUserList($page_size, $firm_id);
         $return_data = ['code'=>20000,'msg'=>'', 'data'=>$user_list];
         return response()->json($return_data);
     }
@@ -50,6 +51,7 @@ class UserController extends Controller
         //获取参数 校验参数
         $input = $request->all();
         $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';
+        $block_type = isset($input['block_type']) ? $input['block_type'] : '';//仓号类型
         $block_id = isset($input['block_id']) ? $input['block_id'] : '';
         $role_id = isset($input['role_id']) ? $input['role_id'] : '';
         $user_name = isset($input['user_name']) ? $input['user_name'] : '';
@@ -58,10 +60,10 @@ class UserController extends Controller
         $page =  isset($input['page']) ? $input['page'] : 10;
         //$firm_id = $request->header('firmId');
         $firm_id = isset($input['firm_id']) ? $input['firm_id'] : '';
-        if(empty($firm_id)) return  response()->json(['code'=>60000,'msg'=>'参数错误', 'data'=>['缺少参数,企业ID']]);
+        if(empty($firm_id)) return  response()->json(['code'=>60000,'msg'=>'参数错误,缺少参数,企业ID', 'data'=>['']]);
 
         $model_user = new user();
-        $user_list = $model_user->getUsers($factory_id, $block_id, $role_id, $user_name, $page_size, $firm_id);
+        $user_list = $model_user->getUsers($factory_id, $block_type, $block_id, $role_id, $user_name, $page_size, $firm_id);
         $return_data = ['code'=>20000,'msg'=>'', 'data'=>$user_list];
         return response()->json($return_data);
     }
@@ -144,7 +146,7 @@ class UserController extends Controller
         $role_id = isset($input['role_id']) ? $input['role_id'] : '';
         //$firm_id = $request->header('firmId');
         $firm_id = isset($input['firm_id']) ? $input['firm_id'] : '';
-        if( empty($factory_id)) return  response()->json(['code'=>60000,'msg'=>'参数错误', 'data'=>['缺少参数工厂ID']]);
+        if( empty($factory_id) || empty($role_id)) return  response()->json(['code'=>60000,'msg'=>'参数错误', 'data'=>['缺少参数工厂ID']]);
 
         //获取未分配的所有仓号
         $model_user_factory = new UserFactory();
@@ -176,7 +178,7 @@ class UserController extends Controller
      */
     public function getCage($block_id)
     {
-        //获取未分配的所有仓号
+        //人员管理--获取仓号下鸽笼个数
         $model_user_factory = new Cage();
         return $model_user_factory->getCageNum($block_id);
     }
@@ -240,7 +242,7 @@ class UserController extends Controller
         $role_id = isset($input['role_id']) ? $input['role_id'] : '';
         $user_name = isset($input['user_name']) ? $input['user_name'] : '';
         $mobile = isset($input['mobile']) ? $input['mobile'] : '';
-        $block_id = isset($input['block_id']) ? $input['block_id'] : '';
+        $block_id = isset($input['block_id']) ? $input['block_id'] : [];
         //$firm_id = $request->header('firmId');
         $firm_id = isset($input['firm_id']) ? $input['firm_id'] : '';
         $data['firm_id'] = $firm_id;
@@ -248,10 +250,11 @@ class UserController extends Controller
         $data['factory_id'] = $factory_id;
         $data['user_name'] = $user_name;
         $data['mobile'] = $mobile;
-        if(empty($firm_id) || empty($rsg_time) || empty($factory_id) || empty($role_id) || empty($user_name) || empty($mobile))
+        if(empty($firm_id) || empty($rsg_time) || empty($role_id) || empty($user_name) || empty($mobile))
             return  response()->json(['code'=>60000,'msg'=>'参数错误', 'data'=>$data]);
-        if(!is_array($block_id))
-            return  response()->json(['code'=>60000,'msg'=>'参数错误', 'data'=>$data]);
+//        if(!is_array($block_id))
+//            return  response()->json(['code'=>60000,'msg'=>'参数错误', 'data'=>$data]);
+        if(!$this->is_mobile($mobile))  return  response()->json(['code'=>40000,'msg'=>'手机号不正确', 'data'=>['']]);
         //开始添加数据
         $model_user = new User();
         $model_user_factory = new UserFactory();
@@ -274,14 +277,28 @@ class UserController extends Controller
             DB::rollBack();
             return response()->json($role_data);
         }
-        //新增用户管理厂区
-        for($i = 0; $i < count($block_id); $i++)
+        if(count($block_id) == 0)
         {
-            $block_data = $model_user_factory->addUserFactory($user_data['user_id'], $firm_id,$factory_id, $block_id[$i]);
-            if($block_data['code'] != 20000)
+            //绑定厂区 没有仓号
+            $block_data = $model_user_factory->addUserFactory($user_data['user_id'], $firm_id,$factory_id, 0);
+        }
+        if(is_array($block_id) && count($block_id) > 0)
+        {
+            //新增用户管理厂区
+            for($i = 0; $i < count($block_id); $i++)
             {
-                DB::rollBack();
-                return response()->json($block_data);
+                //判断block_id 存不存在
+                if(empty($block_id[$i]))
+                {
+                    DB::rollBack();
+                    return response()->json(['code'=>60000,'msg'=>'参数错误', 'data'=>$data]);
+                }
+                $block_data = $model_user_factory->addUserFactory($user_data['user_id'], $firm_id,$factory_id, $block_id[$i]);
+                if($block_data['code'] != 20000)
+                {
+                    DB::rollBack();
+                    return response()->json($block_data);
+                }
             }
         }
         DB::commit();
@@ -304,16 +321,16 @@ class UserController extends Controller
         $old_factory_id = isset($input['old_factory_id']) ? $input['old_factory_id'] : '';
         $factory_id = isset($input['factory_id']) ? $input['factory_id'] : '';
         $role_id = isset($input['role_id']) ? $input['role_id'] : '';
-        $old_block_id = isset($input['old_block_id']) ? $input['old_block_id'] : '';
+        $old_block_id = isset($input['old_block_id']) ? $input['old_block_id'] : [];
         $user_name = isset($input['user_name']) ? $input['user_name'] : '';
         $mobile = isset($input['mobile']) ? $input['mobile'] : '';
-        $block_id = isset($input['block_id']) ? $input['block_id'] : '';
+        $block_id = isset($input['block_id']) ? $input['block_id'] : [];
         $firm_id = isset($input['firm_id']) ? $input['firm_id'] : '';
 //        $firm_id = $request->header('firmId');
-        if(empty($firm_id) || empty($rsg_time) || empty($factory_id) || empty($role_id) || empty($user_name) ||
-            empty($mobile) || empty($user_id))
-            return  response()->json(['code'=>60000,'msg'=>'参数错误', 'data'=>['缺少参数']]);
-
+        //if(empty($firm_id) || empty($rsg_time) || empty($factory_id) || empty($role_id) || empty($user_name) ||
+//            empty($mobile) || empty($user_id))
+//            return  response()->json(['code'=>60000,'msg'=>'参数错误', 'data'=>['缺少参数']]);
+        if(!$this->is_mobile($mobile))  return  response()->json(['code'=>40000,'msg'=>'手机号不正确', 'data'=>['']]);
         //开始添加数据
         $model_user = new User();
         $model_user_factory = new UserFactory();
@@ -333,15 +350,46 @@ class UserController extends Controller
             DB::rollBack();
             return response()->json($role_data);
         }
-
-        //修改仓号信息
-        $block_data = $model_user_factory->editUserFactory($user_data['user_id'], $old_factory_id,
-            $old_block_id, $factory_id, $block_id);
-        if($block_data['code'] != 20000)
+        if($old_factory_id != $factory_id)
         {
-            DB::rollBack();
-            return response()->json($block_data);
+            //绑定厂区 没有仓号
+            $model_user_factory->delUserFactory($user_id, $old_factory_id, 0);
+            $model_user_factory->addUserFactory($user_id, $firm_id,$factory_id, 0);
         }
+        if(empty($block_id) &&  ($old_factory_id == $factory_id))
+        {
+            $model_user_factory->addUserFactory($user_id, $firm_id, $factory_id, 0);
+        }
+        if($block_id &&  ($old_factory_id == $factory_id))
+        {
+            $model_user_factory->delUserFactory($user_id, $factory_id, 0);
+        }
+        //修改仓号信息
+        //计算增加的仓号ID
+        $add_blocks = array_values(array_diff($block_id, $old_block_id));
+        foreach ($add_blocks as $v)
+        {
+            $block_data = $model_user_factory->addUserFactory($user_id, $firm_id,$factory_id, $v);
+            if($block_data['code'] != 20000)
+            {
+                DB::rollBack();
+                return response()->json($block_data);
+            }
+        }
+        //计算减少的仓号ID
+        $reduce_blocks = array_values(array_diff($old_block_id, $block_id));
+        foreach ($reduce_blocks as $v)
+        {
+            $block_data = $model_user_factory->delUserFactory($user_id, $factory_id, $v);
+            if($block_data['code'] != 20000)
+            {
+                DB::rollBack();
+                return response()->json($block_data);
+            }
+        }
+//        $block_data = $model_user_factory->editUserFactory($user_data['user_id'], $old_factory_id,
+//            $old_block_id, $factory_id, $block_id);
+
         DB::commit();
         $return_data = ['code'=>20000,'msg'=>'修改成功', 'data'=>[]];
         return response()->json($return_data);
@@ -387,7 +435,7 @@ class UserController extends Controller
             return response()->json($block_data);
         }
         DB::commit();
-        $return_data = ['code'=>20000,'msg'=>'', 'data'=>['删除成功']];
+        $return_data = ['code'=>20000,'msg'=>'删除成功', 'data'=>['']];
         return response()->json($return_data);
     }
 
@@ -424,6 +472,65 @@ class UserController extends Controller
         $model_user = new User();
         $user_data = $model_user->resetUserPassword($user_id, $password);
         return response()->json($user_data);
+    }
+
+    /**
+     * 根据人员获取全部厂区仓号鸽笼
+     * @param Request $request
+     * @return mixed
+     */
+    public function UserAllBlocks(Request $request)
+    {
+        //获取参数 校验参数
+        $input = $request->all();
+        $user_id = isset($input['user_id']) ? $input['user_id'] : 0;
+        $firm_id = isset($input['firm_id']) ? $input['firm_id'] : 0;
+        if(empty($user_id) || empty($firm_id))  return  response()->json(['code'=>60000,'msg'=>'参数错误', 'data'=>[]]);
+
+        $model_user_factory = new UserFactory();
+        $user_factory = $model_user_factory->getUserFactory($user_id, $firm_id);
+        $factory_data = array();
+        $model_cage= new Cage();
+        foreach ($user_factory as $v)
+        {
+            $array = array();
+            $factory_id = $v->factory_id;
+            $factory_name = $v->factory_name;
+            $array['factory_id'] = $factory_id;
+            $array['factory_name'] = $factory_name;
+            $array['type'] = $model_user_factory->getUserBlockType($user_id);
+            $exists_type = $model_user_factory->getFactoryByUserId($user_id, $factory_id, 0);
+            if($exists_type)
+                $array['type'] = [];
+            foreach ($array['type'] as $k)
+            {
+                $k->blocks = $model_user_factory->getUserBlocks($user_id, $k->block_type, $factory_id, $firm_id);
+                foreach ($k->blocks as $value)
+                {
+                    $value->list = $model_cage->getAllCages($value->block_id);
+                    $value->amount = $model_cage->getCageNum($value->block_id);
+                }
+            }
+            $factory_data[] = $array;
+        }
+        $return_data = ['code'=>20000,'msg'=>'', 'data'=>$factory_data];
+        return response()->json($return_data);
+    }
+
+    /**
+     * 验证输入的手机号码
+     * @param  $user_mobile
+     * @return bool
+     */
+    function is_mobile($user_mobile)
+    {
+        $chars = "/^((\(\d{2,3}\))|(\d{3}\-))?1(3|4|5|7|8|9)\d{9}$/";
+        if (preg_match($chars, $user_mobile)){
+            return true;
+        }else{
+            return false;
+        }
+
     }
 
 }

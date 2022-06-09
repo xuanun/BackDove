@@ -87,10 +87,11 @@ class Drugs extends Model
      * @param $item_id
      * @param $production
      * @param $approved
+     * @param $firm_id
      * @param $page_size
      * @return mixed
      */
-    public function getDataList($data_time, $factory_id, $item_id, $production, $approved, $page_size)
+    public function getDataList($data_time, $factory_id, $item_id, $production, $approved, $firm_id, $page_size)
     {
         $results =  DB::table($this->table)
             ->select(DB::raw('drugs_id, drugs_name as item_name, factory_id, producedate, factory.name as factory_name, category, production, batch_number, unit_price, number, approved, creatime'))
@@ -98,6 +99,8 @@ class Drugs extends Model
             ->leftJoin('dove_factory as factory', 'factory.id', '=', 'dove_drugs.factory_id');
         if($factory_id)
             $results = $results->where('factory_id', $factory_id);
+        if($firm_id)
+            $results = $results->where('factory.firm_id', $firm_id);
         if($item_id)
             $results = $results->where('item_id', $item_id);
         if($production)
@@ -107,26 +110,44 @@ class Drugs extends Model
         if($approved)
             $results = $results->where('approved','like',$approved);
         $results = $results
-            ->orderBy('drugs_id','desc')
-            ->paginate($page_size);
+            ->orderBy('drugs_id','desc');
+        if($page_size)
+        {
+            $results = $results->paginate($page_size);
+            $data = [
+                'total'=>$results->total(),
+                'currentPage'=>$results->currentPage(),
+                'pageSize'=>$page_size,
+                'list'=>[]
+            ];
 
-        $data = [
-            'total'=>$results->total(),
-            'currentPage'=>$results->currentPage(),
-            'pageSize'=>$page_size,
-            'list'=>[]
-        ];
-        foreach($results as $v){
-            if($v->category == 1)
-                $v->category_name = '药品';
-            elseif ($v->category == 2)
-                $v->category_name = '疫苗';
-            else
-                $v->category_name = '';
-            $v->creatime = date('Y-m-d', $v->creatime);
-            $data['list'][] = $v;
+            foreach($results as $v){
+                if($v->category == 1)
+                    $v->category_name = '药品';
+                elseif ($v->category == 2)
+                    $v->category_name = '疫苗';
+                else
+                    $v->category_name = '';
+                $v->creatime = date('Y-m-d', $v->creatime);
+                $data['list'][] = $v;
+            }
+            return  $data;
+        }else{
+            $results = $results->get();
+            $data['list'] = [];
+            foreach($results as $v){
+                if($v->category == 1)
+                    $v->category_name = '药品';
+                elseif ($v->category == 2)
+                    $v->category_name = '疫苗';
+                else
+                    $v->category_name = '';
+                $v->creatime = date('Y-m-d', $v->creatime);
+                $data['list'][] = $v;
+            }
+            return  $data;
         }
-        return  $data;
+
     }
 
     /**
@@ -172,7 +193,7 @@ class Drugs extends Model
     }
 
     /**
-     * @param $item_id
+     * @param $drugs_name
      * @param $production
      * @param $batch_number
      * @param $factory_id
@@ -181,19 +202,19 @@ class Drugs extends Model
      * 药品出入库更新库存
      * @return mixed
      */
-    public function updateData($item_id, $production, $factory_id, $batch_number, $number, $type_id)
+    public function updateData($drugs_name, $production, $factory_id, $batch_number, $number, $type_id)
     {
         try {
             if($type_id == 1){
                 DB::table($this->table)
-                    ->where('item_id', $item_id)
+                    ->where('drugs_name', $drugs_name)
                     ->where('production', $production)
                     ->where('factory_id', $factory_id)
                     ->where('batch_number', $batch_number)
                     ->increment('number', $number);
             }elseif($type_id == 2){
                 DB::table($this->table)
-                    ->where('item_id', $item_id)
+                    ->where('drugs_name', $drugs_name)
                     ->where('production', $production)
                     ->where('factory_id', $factory_id)
                     ->where('batch_number', $batch_number)
@@ -224,5 +245,25 @@ class Drugs extends Model
             ->where('factory_id', $factory_id)
             ->exists();
 
+    }
+
+    /**
+     * @param $drugs_name
+     * @param $production
+     * @param $batch_number
+     * @param $factory_id
+     * 查询药品库存
+     * @return mixed
+     */
+    public function getDrugsNumber($drugs_name, $production, $factory_id, $batch_number)
+    {
+        $results = DB::table($this->table)
+            ->select(DB::raw('number'))
+            ->where('drugs_name', $drugs_name)
+            ->where('production', $production)
+            ->where('batch_number', $batch_number)
+            ->where('factory_id', $factory_id)
+            ->first();
+        return empty($results->number) ? 0 : $results->number;
     }
 }

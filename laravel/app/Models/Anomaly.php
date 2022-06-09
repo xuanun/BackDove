@@ -66,7 +66,7 @@ class Anomaly extends Model
     }
 
     /**
-     * 通过类型获取新闻
+     * 获取异常数据列表
      * @param $start_time
      * @param $end_time
      * @param $factory_id
@@ -159,4 +159,37 @@ class Anomaly extends Model
         return  $return;
     }
 
+    /**
+     * 获取异常数据列表
+     * @param $firm_id
+     * @param $start_time
+     * @param $end_time
+     * @param $factory_id
+     * @return mixed
+     */
+    public function getAllList($firm_id, $start_time, $end_time, $factory_id)
+    {
+        $results = DB::table($this->table)
+            ->select(DB::raw('dove_anomaly.id, anomaly_date, dove_anomaly.factory_id, factory.name as factory_name, dove_anomaly.type_name, block_id, block.name as block_name, cage_id, category_name, die_rate, sick_rate,
+            inability_rate, clear_egg_rate, anomaly_status, cause, data_status'))
+            ->leftJoin('dove_block as block', 'block.id', '=', 'dove_anomaly.block_id')
+            ->leftJoin('dove_factory as factory', 'factory.id', '=', 'dove_anomaly.factory_id')
+            ->where("factory.firm_id",$firm_id)
+            ->where("factory.id",$factory_id)
+            ->whereBetween('dove_anomaly.anomaly_date', [$start_time, $end_time])
+            ->orderBy('dove_anomaly.created_time', 'desc')
+            ->get();
+        $data = [
+            'list'=>[]
+        ];
+
+        foreach($results as $v){
+            $v->die_rate =  empty($v->die_rate) ? '/' : $v->die_rate.'%';
+            $v->sick_rate = empty($v->sick_rate) ? '/' : $v->sick_rate.'%';
+            $v->inability_rate =  empty($v->inability_rate) ?  '/' : $v->inability_rate.'%';
+            $v->clear_egg_rate =  empty($v->clear_egg_rate) ?  '/' : $v->clear_egg_rate.'%';
+            $data['list'][] = $v;
+        }
+        return  $data;
+    }
 }

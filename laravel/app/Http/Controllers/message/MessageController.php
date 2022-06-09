@@ -79,4 +79,25 @@ class MessageController  extends  Controller
         return response()->json($data);
     }
 
+    /**
+     * 首页--消息中心 修改消息
+     * @param Request $request
+     * @return mixed
+     */
+    public function  editMessage(Request $request)
+    {
+        $input = $request->all();
+        $message_id = isset($input['message_id']) ? $input['message_id'] : '';
+        $title = isset($input['title']) ? $input['title'] : '';
+        $role_id = isset($input['role_id']) ? $input['role_id'] : 0;
+        $content = isset($input['content']) ? $input['content'] : '';
+        $user_id = isset($input['user_id']) ? $input['user_id'] : '';
+        $firm_id = isset($input['firm_id']) ? $input['firm_id'] : '';
+        if(empty($firm_id) || empty($user_id) || empty($message_id))
+            return  response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
+
+        $model_message = new Message();
+        $data = $model_message->editMessage($message_id, $title, $role_id, $content, $user_id, $firm_id);
+        return response()->json($data);
+    }
 }

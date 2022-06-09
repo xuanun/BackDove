@@ -14,18 +14,20 @@ class MedRecord extends Model
      * @param $factory_id
      * @param $block_type
      * @param $block_id
+     * @param $firm_id
      * @param $page_size
      * 查询列表
      * @return mixed
      */
-    public function getList($start_time, $end_time, $factory_id, $block_type, $block_id, $page_size)
+    public function getList($start_time, $end_time, $factory_id, $block_type, $block_id, $firm_id, $page_size)
     {
         $results =  DB::table('dove_med_record as record')
             ->select(DB::raw('record_id, factory.id as factory_id, factory.name as factory_name, block.block_type, block.type_name, block.id as block_id, block.name as block_name, record.uid as user_id, record_time, symptom, record.number as number, usage_time, day, dosage, record.item_id, record.druge_id as drugs_id, drugs.drugs_name as item_name, drugs.production, drugs.batch_number,  approval, feedback'))
             ->leftJoin('dove_block as block', 'block.id', '=', 'record.block_id')
             ->leftJoin('dove_factory as factory', 'factory.id', '=', 'block.factory_id')
             ->leftJoin('dove_items as item', 'item.id', '=', 'record.item_id')
-            ->leftJoin('dove_drugs as drugs', 'record.druge_id', '=', 'drugs.drugs_id');
+            ->leftJoin('dove_drugs as drugs', 'record.druge_id', '=', 'drugs.drugs_id')
+            ->where('factory.firm_id', $firm_id);
 //            ->leftJoin('dove_grain as grain', 'grain.grain_id', '=', 'receive.grain_id');
         if($start_time && $end_time){
             $results = $results->whereBetween('record.record_time', [$start_time, $end_time]);
@@ -43,19 +45,29 @@ class MedRecord extends Model
         if($factory_id)
             $results = $results->where('block.factory_id', $factory_id);
         $results = $results
-            ->orderBy('record.record_id','desc')
-            ->paginate($page_size);
+            ->orderBy('record.record_id','desc');
+        if($page_size)
+        {
+            $results = $results->paginate($page_size);
+            $data = [
+                'total'=>$results->total(),
+                'currentPage'=>$results->currentPage(),
+                'pageSize'=>$page_size,
+                'list'=>[]
+            ];
 
-        $data = [
-            'total'=>$results->total(),
-            'currentPage'=>$results->currentPage(),
-            'pageSize'=>$page_size,
-            'list'=>[]
-        ];
-        foreach($results as $v){
-            $data['list'][] = $v;
+            foreach($results as $v){
+                $data['list'][] = $v;
+            }
+            return  $data;
+        }else{
+            $results = $results->get();
+            $data['list'] = [];
+            foreach($results as $v){
+                $data['list'][] = $v;
+            }
+            return  $data;
         }
-        return  $data;
     }
 
     /**
@@ -183,4 +195,15 @@ class MedRecord extends Model
         return $return;
     }
 
+    /**
+     * @param $record_id
+     * 查询数据详情
+     * @return mixed
+     */
+    public function getInfo($record_id)
+    {
+        return $results =  DB::table($this->table)
+            ->where('record_id', $record_id)
+            ->first();
+    }
 }

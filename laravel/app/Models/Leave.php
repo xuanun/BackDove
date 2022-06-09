@@ -13,17 +13,19 @@ class Leave extends Model
      * @param $end_time
      * @param $factory_id
      * @param $user_name
+     * @param $firm_id
      * @param $page_size
      * 查询列表
      * @return mixed
      */
-    public function getList($start_time, $end_time, $factory_id, $user_name, $page_size)
+    public function getList($start_time, $end_time, $factory_id, $user_name, $firm_id, $page_size)
     {
         $results =  DB::table('dove_leave as leave')
             ->select(DB::raw('factory.name as factory_name, user.user_name, leave.start_time, leave.end_time, type.type_name, leave.reason'))
             ->leftJoin('dove_factory as factory', 'factory.id', '=', 'leave.factory_id')
             ->leftJoin('dove_user as user', 'user.id', '=', 'leave.uid')
-            ->leftJoin('dove_leave_type as type', 'type.type_id', '=', 'leave.type_id');
+            ->leftJoin('dove_leave_type as type', 'type.type_id', '=', 'leave.type_id')
+            ->where('factory.firm_id', $firm_id);
         if($start_time && $end_time){
             $results = $results->whereBetween('leave.start_time', [$start_time, $end_time]);
         }elseif($start_time && empty($end_time))

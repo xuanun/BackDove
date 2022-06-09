@@ -127,4 +127,37 @@ class Message  extends Model
         return  $return;
     }
 
+    /**
+     * 消息中心修改消息
+     * @param $message_id
+     * @param $title
+     * @param $role_id
+     * @param $content
+     * @param $user_id
+     * @param $firm_id
+     * @return mixed
+     */
+    public function editMessage($message_id, $title, $role_id, $content, $user_id, $firm_id)
+    {
+        DB::beginTransaction();
+        try{
+            $updateArray = [
+                'title' => $title,
+                'role_id' => $role_id,
+                'content' => $content,
+                'firm_id' => $firm_id,
+                'send_id' => $user_id,
+                'delete' => self::NOT_DEL,
+                'updated_time' => time(),
+            ];
+            DB::table($this->table)->where('message_id', $message_id)->update($updateArray);
+            $return = ['code'=>20000,'msg'=>'修改成功', 'data'=>[]];
+        }catch(\Exception $e){
+            DB::rollBack();
+            $return = ['code'=>40000,'msg'=>'修改失败', 'data'=>[$e->getMessage()]];
+        }
+        DB::commit();
+        return $return;
+    }
+
 }

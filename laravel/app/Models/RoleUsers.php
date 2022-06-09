@@ -37,7 +37,7 @@ class RoleUsers extends Model
             ->select(DB::raw('role.id, role.name'))
             ->leftJoin('dove_roles as role', 'dove_role_users.role_id','=', 'role.id')
             ->where('dove_role_users.user_id', $user_id)
-            ->where('dove_role_users.data_status', self::NORMAL)
+            //->where('dove_role_users.data_status', self::NORMAL)
             ->first();
     }
 
@@ -63,7 +63,7 @@ class RoleUsers extends Model
     public function addUserRole($user_id, $role_id)
     {
         $exists = $this->existUserId($user_id);
-        $return = ['code'=>40000,'msg'=>'新增失败', 'data'=>['用户角色已经存在']];
+        $return = ['code'=>40000,'msg'=>'新增失败,用户角色已经存在', 'data'=>['']];
         if(!$exists)
         {
             try{
@@ -108,7 +108,7 @@ class RoleUsers extends Model
     public function editUserRole($user_id, $role_id)
     {
         $exists = $this->existUserId($user_id);
-        $return = ['code'=>40000,'msg'=>'修改失败', 'data'=>['用户角色不存在']];
+        $return = ['code'=>40000,'msg'=>'修改失败,用户角色不存在', 'data'=>['']];
         if($exists)
         {
             try{
@@ -138,7 +138,7 @@ class RoleUsers extends Model
     public function delUserRole($user_id)
     {
         $exists = $this->existUserId($user_id);
-        $return = ['code'=>40000,'msg'=>'删除失败', 'data'=>['用户角色不存在']];
+        $return = ['code'=>40000,'msg'=>'删除失败,用户角色不存在', 'data'=>['']];
         if($exists)
         {
             try{

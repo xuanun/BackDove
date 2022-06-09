@@ -29,7 +29,7 @@ class Cage extends Model
     public function getAllCages($block_id)
     {
         return $results = DB::table($this->table)
-            ->select(DB::raw('id'))
+            ->select(DB::raw('id, name'))
             ->where('block_id', $block_id)
             ->get();
     }
@@ -50,38 +50,85 @@ class Cage extends Model
 
     /**
      * 通过仓号ID查询鸽笼
+     * @param $factory_id
+     * @param $block_type
+     * @param $firm_id
      * @param $block_id
      * @param $start_cage
      * @param $end_cage
+     * @param $start_name
+     * @param $end_name
+     * @param $page_size
+     * @param $size
      * @return mixed
      */
-    public function getCage($block_id, $start_cage, $end_cage)
+    public function getCage($factory_id, $block_type, $firm_id, $block_id, $start_cage, $end_cage, $start_name, $end_name, $page_size, $size)
     {
          $results = DB::table($this->table)
-            ->select(DB::raw('id'))
-            ->where('block_id', $block_id);
-        if($start_cage && $end_cage){
-            $results = $results->whereBetween('id', [$start_cage, $end_cage])->get();
-        }elseif ($start_cage){
-            $results = $results->where('id', '>=', $start_cage)->get();
-        }elseif ($end_cage){
-            $results = $results->where('id', '=<', $end_cage)->get();
-        }else{
-            $results = $results->get();;
+             ->select(DB::raw(' dove_cage.id as id, dove_cage.name as name, block.id as block_id, block.factory_id, factory.name as factory_name, block.name as block_name, block.block_type, block.type_name'))
+             ->leftJoin('dove_block as block', 'block.id', '=', 'dove_cage.block_id')
+             ->leftJoin('dove_factory as factory', 'block.factory_id','=', 'factory.id');
+        if($factory_id)
+            $results = $results->where('block.factory_id', $factory_id);
+        if($block_type)
+            $results = $results->where('block.block_type', $block_type);
+        if($firm_id)
+            $results = $results->where('factory.firm_id', $firm_id);
+        if($block_id){
+            $results = $results->where('block.id', $block_id);
         }
-        return $results;
+        if($start_cage && $end_cage){
+            $results = $results->whereBetween('dove_cage.id', [$start_cage, $end_cage]);
+        }elseif ($start_cage){
+            $results = $results->where('dove_cage.id', '>=', $start_cage);
+        }elseif ($end_cage){
+            $results = $results->where('dove_cage.id', '=<', $end_cage);
+        }
+        if($start_name && $end_name){
+            $results = $results->whereBetween('dove_cage.name', [$start_name, $end_name]);
+        }elseif ($start_name){
+            $results = $results->where('dove_cage.name', '>=', $start_name);
+        }elseif ($end_name){
+            $results = $results->where('dove_cage.name', '=<', $end_name);
+        }
+        $results =  $results
+            ->orderBy('dove_cage.block_id')
+            ->orderBy('dove_cage.id')
+            ->paginate($page_size * $size);
+        $data = [
+            'total'=> ceil($results->total() / 6),
+            'currentPage'=>$results->currentPage(),
+            'pageSize'=>$page_size,
+            'list'=>[]
+        ];
+        foreach($results as $v){
+            $data['list'][] = $v;
+        }
+        return  $data;
     }
 
     /**
      * @param $block_id
+     * @param $pigeon
+     * @param $egg
+     * @param $squab
+     * @param $child
+     * @param $youth
+     * @param $name
      * 新增鸽笼
      * @return mixed
      */
-    public function addCage($block_id)
+    public function addCage($block_id, $pigeon, $egg, $squab, $child, $youth, $name)
     {
         try{
             $insertArray = [
+                'name' => $name,
                 'block_id' =>$block_id,
+                'pigeon' => $pigeon,
+                'egg' => $egg,
+                'squab' => $squab,
+                'child' => $child,
+                'youth' => $youth,
                 'created_time' => time(),
                 'updated_time' => time(),
             ];
@@ -108,7 +155,7 @@ class Cage extends Model
     }
 
     /**
-     * 修改鸽笼数据 乳鸽
+     * 修改鸽笼数据
      * @param $cage_id
      * @param $block_id
      * @return mixed
@@ -164,11 +211,11 @@ class Cage extends Model
             if($change_type && $change_number < 0)
                 DB::table($this->table)
                     ->where('id', $cage_id)
-                    ->decrement($change_type,  intval(0 - $change_number));
+                    ->decrement($change_type,  abs($change_number));
             $return = ['code'=>20000,'msg'=>'修改成功', 'data'=>[]];
         }catch(\Exception $e){
             DB::rollBack();
-            $return = ['code'=>40000,'msg'=>'修改失败', 'data'=>[$e->getMessage()]];
+            $return = ['code'=>40000,'msg'=>'修改失败,减少不能大于存栏', 'data'=>[$e->getMessage()]];
         }
         return  $return;
     }
@@ -210,4 +257,48 @@ class Cage extends Model
         return $results;
     }
 
+    /**
+     * 通过仓号类型获取存栏
+     * @param $block_id
+     * @return mixed
+     */
+    public function getSumAmount($block_id)
+    {
+        return $results = DB::table($this->table)
+            ->select(DB::raw('sum(pigeon) as sum_pigeon, sum(egg) as sum_egg, sum(squab) as sum_squab,
+            sum(child) as sum_child, sum(youth) as sum_youth'))
+            ->where('block_id', $block_id)
+            ->get();
+    }
+
+    /**
+     * 通过企业ID获取存栏
+     * @param $firm_id
+     * @return mixed
+     */
+    public function getFirmSumAmount($firm_id)
+    {
+        return $results = DB::table($this->table)
+            ->select(DB::raw('sum(survival) as sum_amount'))
+            ->leftJoin('dove_block as block', 'block.id', '=', 'dove_cage.block_id')
+            ->leftJoin('dove_factory as factory', 'factory.id', '=', 'block.factory_id')
+            ->where('factory.firm_id', $firm_id)
+            ->first();
+    }
+
+    /**
+     * 通过仓号类型获取存栏
+     * @param $factory_id
+     * @return mixed
+     */
+    public function getMaxName($factory_id)
+    {
+       $results = DB::table($this->table)
+            ->select(DB::raw('dove_cage.name as name'))
+            ->leftJoin('dove_block as block', 'block.id', '=', 'dove_cage.block_id')
+            ->where('block.factory_id', $factory_id)
+            ->orderBy('dove_cage.name','desc')
+            ->first();
+        return empty($results->name) ? 0 : $results->name;
+    }
 }

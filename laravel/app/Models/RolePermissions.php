@@ -88,6 +88,20 @@ class RolePermissions extends Model
             ->where('role_id', $role_id)
             ->where('permission_id', $permissions_id)
             ->exists();
+    }
 
+    /**
+     * 通过角色ID查询所有权限
+     * @param  $role_id
+     * @return mixed
+     */
+    public function getPerInfo($role_id)
+    {
+        return DB::table('dove_role_permissions as role_per')
+            ->select(DB::raw('per.id, per.name, per.p_id'))
+            ->leftJoin('dove_permissions as per', 'per.id', '=', 'role_per.permission_id')
+            ->where('role_per.role_id',$role_id)
+            ->orderBy('per.p_id','ASC')
+            ->get();
     }
 }

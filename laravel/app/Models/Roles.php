@@ -22,7 +22,7 @@ class Roles extends Model
             ->select(DB::raw('roles.id as id, roles.name as name, roles.role_desc as role_desc, count(role.user_id) as amount'))
             ->leftJoin('dove_role_users as role', 'role.role_id', '=', 'roles.id')
             ->where('roles.data_status', self::NORMAL)
-            ->where('roles.data_status', $firm_id)
+            ->where('roles.firm_id', $firm_id)
             ->groupBy('roles.id')
             ->paginate($page_size);
 
@@ -203,5 +203,18 @@ class Roles extends Model
             DB::rollBack();
             return  ['code'=>40000,'msg'=>'新增失败', 'data'=>[]];
         }
+    }
+
+    /**
+     * 获取角色信息
+     * @param $role_id
+     * @return mixed
+     */
+    public function getRoleName( $role_id)
+    {
+        return  DB::table($this->table)
+            ->select(DB::raw('id as role_id, name as role_name'))
+            ->where('id', $role_id)
+            ->first();
     }
 }

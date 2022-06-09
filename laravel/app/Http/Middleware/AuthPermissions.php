@@ -39,7 +39,7 @@ class AuthPermissions extends Middleware
 
         //判断路由是否设置路由
         $model_permissions = new Permissions();
-        $exits_path = $model_permissions->exitsUrlPath($url_path, $firm_id);
+        $exits_path = $model_permissions->exitsUrlPath($url_path);
         if ($exits_path)
         {
             $redis = Redis::connection('default');
@@ -61,7 +61,7 @@ class AuthPermissions extends Middleware
 
             //获取权限路由
             $model_permissions = new Permissions();
-            $per_paths = $model_permissions->getPermissions($per_ids, $firm_id);
+            $per_paths = $model_permissions->getPermissions($per_ids);
             $per_array = array();
             foreach ($per_paths as $v)
             {

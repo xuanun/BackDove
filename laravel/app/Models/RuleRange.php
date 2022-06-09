@@ -64,4 +64,17 @@ class RuleRange extends Model
         DB::commit();
         return  $return;
     }
+
+    /**
+     * 获取考勤打卡地点
+     * @param $firm_id
+     * @return mixed
+     */
+    public function getList($firm_id)
+    {
+        return  DB::table($this->table)
+            ->select(DB::raw('range_id, firm_id, longitude, latitude, address, distance, creatime, uptime'))
+            ->where('firm_id', $firm_id)
+            ->first();
+    }
 }

@@ -17,15 +17,17 @@ class DrugsLog extends Model
      * @param $production
      * @param $approved
      * @param $out_reason
+     * @param $firm_id
      * @param $page_size
      * @return mixed
      */
-    public function getDataList($type_id, $record_time, $factory_id, $category_id, $production, $approved, $out_reason, $page_size)
+    public function getDataList($type_id, $record_time, $factory_id, $category_id, $production, $approved, $out_reason, $firm_id, $page_size)
     {
         $results =  DB::table($this->table)
             ->select(DB::raw('log_id, record_time, supplier, production, producedate, batch_number, category as category_id, number, unit, unit_price, price, approved, receiver, type as type_id, remarks, out_reason, factory_id, factory.name as factory_name, item_id, item.item_name as item_name'))
             ->leftJoin('dove_items as item', 'item.id', '=', 'dove_drugs_log.item_id')
-            ->leftJoin('dove_factory as factory', 'factory.id', '=', 'dove_drugs_log.factory_id');
+            ->leftJoin('dove_factory as factory', 'factory.id', '=', 'dove_drugs_log.factory_id')
+            ->where('factory.firm_id', $firm_id);
         if($type_id)
             $results = $results->where('type', $type_id);
         if($factory_id)
@@ -42,25 +44,40 @@ class DrugsLog extends Model
             $results = $results->where('out_reason','like',$out_reason);
         $results = $results
             ->orderBy('record_time','desc')
-            ->orderBy('log_id','desc')
-            ->paginate($page_size);
-
-        $data = [
-            'total'=>$results->total(),
-            'currentPage'=>$results->currentPage(),
-            'pageSize'=>$page_size,
-            'list'=>[]
-        ];
-        foreach($results as $v){
-            if($v->category_id == 1)
-                $v->category_name = '药品';
-            elseif ($v->category_id == 2)
-                $v->category_name = '疫苗';
-            else
-                $v->category_name = '';
-            $data['list'][] = $v;
+            ->orderBy('log_id','desc');
+        if($page_size)
+        {
+            $results = $results->paginate($page_size);
+            $data = [
+                'total'=>$results->total(),
+                'currentPage'=>$results->currentPage(),
+                'pageSize'=>$page_size,
+                'list'=>[]
+            ];
+            foreach($results as $v){
+                if($v->category_id == 1)
+                    $v->category_name = '药品';
+                elseif ($v->category_id == 2)
+                    $v->category_name = '疫苗';
+                else
+                    $v->category_name = '';
+                $data['list'][] = $v;
+            }
+            return  $data;
+        }else{
+            $results = $results->get();
+            $data['list'] = [];
+            foreach($results as $v){
+                if($v->category_id == 1)
+                    $v->category_name = '药品';
+                elseif ($v->category_id == 2)
+                    $v->category_name = '疫苗';
+                else
+                    $v->category_name = '';
+                $data['list'][] = $v;
+            }
+            return  $data;
         }
-        return  $data;
     }
 
     /**
@@ -210,4 +227,16 @@ class DrugsLog extends Model
         return $return;
     }
 
+    /**
+     * @param $log_id
+     * 查询数据详情
+     * @return mixed
+     */
+    public function getInfo($log_id)
+    {
+        return $results =  DB::table($this->table)
+            ->select(DB::raw('log_id, uid, record_time, item_id, drugs_name, supplier, producedate, batch_number, category, number, unit, unit_price, price, factory_id, approved, receiver, type, remarks, out_reason'))
+            ->where('log_id', $log_id)
+            ->first();
+    }
 }

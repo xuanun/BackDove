@@ -20,6 +20,7 @@ class User extends Model
         $result = DB::table($this->table)
             ->where("user_id",$user_id)
             ->where('data_status', self::NORMAL)
+            ->where('is_del', self::INVALID)
             ->first();
         return $result ? $result : [];
     }
@@ -33,6 +34,7 @@ class User extends Model
         $result = DB::table($this->table)
             ->where("mobile",$mobile)
             ->where('data_status', self::NORMAL)
+            ->where('is_del', self::INVALID)
             ->first();
         return $result ? $result : [];
     }
@@ -85,9 +87,7 @@ class User extends Model
     public function getUserList($page_size, $firm_id)
     {
         $results =  DB::table('dove_user_factory as user_factory')
-            ->select(DB::raw('user.created_time as created_time, user.user_name as name, user.mobile as mobile, roles.name as role_name,
-            factory.name as factory_name, factory.id as factory_id, block.type_name as type_name, user_factory.block_id as block_id, user.data_status as data_status,
-            user_factory.user_id as user_id'))
+            ->select(DB::raw('user.created_time as created_time, user.user_name as name, user.mobile as mobile, roles.id as role_id, roles.name as role_name,factory.name as factory_name, factory.id as factory_id, block.block_type as block_type, block.type_name as type_name, user_factory.block_id as block_id, block.name as block_name,user.data_status as data_status,user_factory.user_id as user_id'))
             ->leftJoin('dove_user as user', 'user.id', '=', 'user_factory.user_id')
             ->leftJoin('dove_factory as factory', 'factory.id', '=', 'user_factory.factory_id')
             ->leftJoin('dove_block as block', 'block.id', '=', 'user_factory.block_id')
@@ -111,9 +111,48 @@ class User extends Model
 
     }
 
+    /**
+     * @param $page_size
+     * @param $firm_id
+     * 查看所有人员列表信息（链表查询）通过user表查询
+     * @return mixed
+     */
+    public function getAllUserList($page_size, $firm_id)
+    {
+        $results =  DB::table('dove_user as user')
+            ->select(DB::raw('user.created_time as created_time, user.register_time as register_time, user.user_name as user_name, user.mobile as mobile, roles.id as role_id, roles.name as role_name,factory.name as factory_name, factory.id as factory_id, block.block_type as block_type, block.type_name as type_name, user_factory.block_id as block_id, block.name as block_name,user.data_status as data_status, user.id as user_id'))
+            ->leftJoin('dove_user_factory as user_factory', 'user.id', '=', 'user_factory.user_id')
+            ->leftJoin('dove_factory as factory', 'factory.id', '=', 'user_factory.factory_id')
+            ->leftJoin('dove_block as block', 'block.id', '=', 'user_factory.block_id')
+            ->leftJoin('dove_role_users as role_users', 'role_users.user_id', '=', 'user.id')
+            ->leftJoin('dove_roles as roles', 'roles.id', '=', 'role_users.role_id')
+            ->where('user.is_del', self::INVALID)
+            ->where('user.firm_id', $firm_id)
+            ->groupBy('user.id')
+            ->paginate($page_size);
+
+        $data = [
+            'total'=>$results->total(),
+            'currentPage'=>$results->currentPage(),
+            'pageSize'=>$page_size,
+            'list'=>[]
+        ];
+
+        $array = array();
+        foreach($results as $v){
+
+            if(!isset($array[$v->user_id]))
+            {
+                $data['list'][] = $v;
+            }
+        }
+
+        return  $data;
+    }
 
     /**
      * @param $factory_id
+     * @param $block_type
      * @param $block_id
      * @param $role_id
      * @param $user_name
@@ -122,12 +161,11 @@ class User extends Model
      * 查看所有人员列表信息（链表查询）
      * @return mixed
      */
-    public function getUsers($factory_id, $block_id, $role_id, $user_name, $page_size, $firm_id)
+    public function getUsers($factory_id, $block_type, $block_id, $role_id, $user_name, $page_size, $firm_id)
     {
         $results =  DB::table('dove_user_factory as user_factory')
-            ->select(DB::raw('user.created_time as created_time, user.user_name as name, user.mobile as mobile, roles.name as role_name,
-            factory.name as factory_name, block.type_name as type_name, user_factory.block_id as block_id, user.data_status as data_status,
-            user_factory.user_id as user_id'))
+            ->select(DB::raw('user.created_time as created_time, user.register_time as register_time, user.user_name as user_name, user.mobile as mobile, roles.name as role_name, factory.name as factory_name, block.type_name as type_name, user_factory.block_id as block_id, user.data_status as data_status,
+            user_factory.user_id as user_id, block.name as block_name'))
             ->leftJoin('dove_user as user', 'user.id', '=', 'user_factory.user_id')
             ->leftJoin('dove_factory as factory', 'factory.id', '=', 'user_factory.factory_id')
             ->leftJoin('dove_block as block', 'block.id', '=', 'user_factory.block_id')
@@ -135,6 +173,8 @@ class User extends Model
             ->leftJoin('dove_roles as roles', 'roles.id', '=', 'role_users.role_id');
         if($factory_id)
             $results = $results->where('user_factory.factory_id', $factory_id);
+        if($block_type)
+            $results = $results->where('block.block_type', $block_type);
         if($block_id)
             $results = $results->where('user_factory.block_id', $block_id);
         if($role_id)
@@ -173,7 +213,6 @@ class User extends Model
     public function addUser($user_name, $mobile, $password, $rsg_time, $firm_id, $is_firm)
     {
         $exists = $this->existsMobile($mobile);
-        $return = ['code'=>40004,'msg'=>'新增失败', 'data'=>['手机号已经存在']];
         if(!$exists)
         {
             try{
@@ -196,14 +235,17 @@ class User extends Model
                 $id = DB::table($this->table)->insertGetId($insertArray);
                 if($id){
                     $return = ['code'=>20000,'msg'=>'新增成功', 'user_id'=>$id];
-                }
-                else
+                } else{
+                    $return = ['code'=>20000,'msg'=>'新增成功', 'user_id'=>$id];
                     DB::rollBack();
+                }
             }catch(\Exception $e){
                 DB::rollBack();
                 $return = ['code'=>40000,'msg'=>'新增失败', 'data'=>[$e->getMessage()]];
             }
         }
+        else
+            $return = ['code'=>40004,'msg'=>'手机号已经存在', 'data'=>[]];
         return $return;
     }
 
@@ -219,20 +261,19 @@ class User extends Model
     public function editUser($user_id, $user_name, $mobile, $rsg_time, $firm_id)
     {
         $exists = $this->existsUserById($user_id);
-        $return = ['code'=>40004,'msg'=>'编辑失败', 'data'=>['账号不存在']];
+        $return = ['code'=>40004,'msg'=>'账号不存在', 'data'=>[]];
         if($exists)
         {
             try{
                 $UpdateArray = [
                     'user_name' =>$user_name,
-                    'mobile' => $mobile,
                     'register_time'=>$rsg_time,
-                    'firm_id'=>$firm_id,
                     'updated_time' => time(),
                 ];
                 DB::table($this->table)
                     ->where('id', $user_id)
                     ->where('data_status', self::NORMAL)
+                    ->where('is_del', self::INVALID)
                     ->update($UpdateArray);
                 $return = ['code'=>20000,'msg'=>'编辑成功', 'user_id'=>$user_id];
             }catch(\Exception $e){
@@ -253,7 +294,7 @@ class User extends Model
     public function editUserFirm($user_id,  $firm_id, $old_user_id)
     {
         $exists = $this->existsUserById($user_id);
-        $return = ['code'=>40004,'msg'=>'编辑失败', 'data'=>['账号不存在']];
+        $return = ['code'=>40004,'msg'=>'账号不存在', 'data'=>[]];
         if($exists)
         {
             try{
@@ -265,6 +306,7 @@ class User extends Model
                 DB::table($this->table)
                     ->where('id', $old_user_id)
                     ->where('data_status', self::NORMAL)
+                    ->where('is_del', self::INVALID)
                     ->update($oldArray);
                 $UpdateArray = [
                     'firm_id'=>$firm_id,
@@ -274,6 +316,7 @@ class User extends Model
                 DB::table($this->table)
                     ->where('id', $user_id)
                     ->where('data_status', self::NORMAL)
+                    ->where('is_del', self::INVALID)
                     ->update($UpdateArray);
                 $return = ['code'=>20000,'msg'=>'编辑成功', 'data'=>[]];
             }catch(\Exception $e){
@@ -294,6 +337,7 @@ class User extends Model
         return DB::table($this->table)
             ->where('mobile', $mobile)
             ->where('data_status', self::NORMAL)
+            ->where('is_del', self::INVALID)
             ->exists();
     }
 
@@ -305,11 +349,12 @@ class User extends Model
     public function delUserInfo($user_id)
     {
         $exists = $this->existsUserById($user_id);
-        $return = ['code'=>40004,'msg'=>'删除失败', 'data'=>['账号不存在']];
+        $return = ['code'=>40004,'msg'=>'账号不存在', 'data'=>[]];
         if($exists)
         {
             try{
                 $UpdateArray = [
+                    'data_status' => self::INVALID,
                     'is_del' => self::NORMAL,
                     'updated_time' => time(),
                 ];
@@ -489,6 +534,44 @@ class User extends Model
             ->where('dove_user.data_status', self::NORMAL)
             ->where('dove_user.is_del', self::INVALID)
             ->where('dove_user.firm_id', $firm_id)
+            ->get();
+    }
+
+    /**
+     * @param $firm_id
+     * 查询企业下人员总数
+     * @return mixed
+     */
+    public function getUserAmount($firm_id)
+    {
+        return $result = DB::table($this->table)
+            ->select(DB::raw('count(id) as amount'))
+            ->where("firm_id",$firm_id)
+            ->where('data_status', self::NORMAL)
+            ->where('is_del', self::INVALID)
+            ->first();
+    }
+
+    /**
+     * @param $firm_id
+     * 不同货物品种销售订单的销售总额
+     * @return mixed
+     */
+    public function userRank($firm_id)
+    {
+        return $result = DB::table('dove_user as user')
+            ->select(DB::raw('user.user_name as user_name, block.name as block_name, sum(cage.survival) as sum_survival, sum(cage.total_sales) as sum_sales, CONCAT(CAST(round(sum(cage.fall_ill)/(sum(cage.survival) + sum(cage.total_sales) + sum(cage.death) + sum(cage.fall_ill) + sum(cage.cull_total))*100 , 3) AS CHAR),\'%\') as disease_rate, CONCAT(CAST(round(sum(cage.death)/(sum(cage.survival) + sum(cage.total_sales) + sum(cage.death) + sum(cage.fall_ill) + sum(cage.cull_total))*100 , 3) AS CHAR),\'%\') as death_rate'))
+            ->leftJoin('dove_role_users as role_user', 'role_user.user_id', '=', 'user.id')
+            ->leftJoin('dove_roles as roles', 'roles.id', '=', 'role_user.role_id')
+            ->leftJoin('dove_user_factory as user_factory', 'user_factory.user_id', '=', 'user.id')
+            ->leftJoin('dove_block as block', 'block.id', '=', 'user_factory.block_id')
+            ->leftJoin('dove_cage as cage', 'cage.block_id', '=', 'block.id')
+            ->where("user.firm_id",$firm_id)
+            ->where('roles.name', '饲养员')
+            ->where('roles.firm_id', $firm_id)
+            ->orderBy('sum_survival', 'desc')
+            ->groupBy('user.id')
+            ->limit(5)
             ->get();
     }
 }

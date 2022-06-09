@@ -25,7 +25,7 @@ class Disinfect extends Model
     public function getList($start_time, $end_time, $factory_id, $block_type, $block_id, $mode, $drugs_id, $firm_id, $page_size)
     {
         $results =  DB::table($this->table)
-            ->select(DB::raw('dove_disinfect.disinfect_id, dove_disinfect.record_time, user.user_name, user.id as user_id, factory.id as factory_id, factory.name as factory_name, block.id as block_id, block.name as block_name, block.block_type, block.type_name,  dove_disinfect.mode, drugs.drugs_id, drugs.drugs_name as drugs_name, dove_disinfect.number, dove_disinfect.remarks'))
+            ->select(DB::raw('dove_disinfect.disinfect_id, dove_disinfect.record_time, user.user_name, user.id as user_id, factory.id as factory_id, factory.name as factory_name, block.id as block_id, block.name as block_name, block.block_type, block.type_name,  dove_disinfect.mode, drugs.drugs_id, drugs.drugs_name as drugs_name, dove_disinfect.number, dove_disinfect.remarks, drugs.production, drugs.batch_number'))
             ->leftJoin('dove_user as user', 'user.id', '=', 'dove_disinfect.uid')
             ->leftJoin('dove_factory as factory', 'factory.id', '=', 'dove_disinfect.factory_id')
             ->leftJoin('dove_block as block', 'block.id', '=', 'dove_disinfect.block_id')
@@ -52,19 +52,29 @@ class Disinfect extends Model
             $results = $results->where('dove_disinfect.drugs_id',$drugs_id);
         $results = $results
             ->where('dove_disinfect.firm_id',$firm_id)
-            ->orderBy('disinfect_id','desc')
-            ->paginate($page_size);
+            ->orderBy('disinfect_id','desc');
+        if($page_size)
+        {
+            $results = $results->paginate($page_size);
+            $data = [
+                'total'=>$results->total(),
+                'currentPage'=>$results->currentPage(),
+                'pageSize'=>$page_size,
+                'list'=>[]
+            ];
 
-        $data = [
-            'total'=>$results->total(),
-            'currentPage'=>$results->currentPage(),
-            'pageSize'=>$page_size,
-            'list'=>[]
-        ];
-        foreach($results as $v){
-            $data['list'][] = $v;
+            foreach($results as $v){
+                $data['list'][] = $v;
+            }
+            return  $data;
+        }else{
+            $results = $results->get();
+            $data['list'] = [];
+            foreach($results as $v){
+                $data['list'][] = $v;
+            }
+            return  $data;
         }
-        return  $data;
     }
 
     /**

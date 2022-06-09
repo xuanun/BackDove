@@ -33,7 +33,7 @@ class IndexController  extends Controller
         //return $position;
         $model_banner = new Banner();
         $return_data = $model_banner->getAllBanner($page_size, $firm_id, $position);
-        return response()->json(['status_code'=>20000,'msg'=>'请求成功',  'data'=>$return_data]);
+        return response()->json(['code'=>20000,'msg'=>'请求成功',  'data'=>$return_data]);
     }
     /**
      * 首页——轮播显示状态
@@ -140,7 +140,7 @@ class IndexController  extends Controller
         $firm_id = isset($input['firm_id']) ? $input['firm_id'] : 0;
         $title = isset($input['title']) ? $input['title'] : '';
         $show_status = isset($input['show_status']) ? $input['show_status'] : 1;
-        if(empty($img_url) || empty($title)) return response()->json(['code'=>60000,'msg'=>'参数错误', 'data'=>[]]);
+        if(empty($img_url) || empty($title) || empty($position)) return response()->json(['code'=>60000,'msg'=>'参数错误', 'data'=>[]]);
 //        $file_array = explode('.',$img_url);
 //        if($file_array[1] == 'jpg' || $file_array[1] == 'jpeg' || $file_array[1] == 'png'|| $file_array[1] == 'gif') {
         //新增轮播图
@@ -167,7 +167,7 @@ class IndexController  extends Controller
         $title = isset($input['title']) ? $input['title'] : '';
         $show_status = isset($input['show_status']) ? $input['show_status'] : 1;
         $position = isset($input['position']) ? $input['position'] : '';
-        if( empty($title) || empty($b_id)) return response()->json(['code'=>60000,'msg'=>'参数错误', 'data'=>[]]);
+        if( empty($title) || empty($b_id) || empty($position)) return response()->json(['code'=>60000,'msg'=>'参数错误', 'data'=>[]]);
         $model_banner = new Banner();
         if($img_url){
 //            $file_array = explode('.',$img_url);

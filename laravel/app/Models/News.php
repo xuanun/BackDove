@@ -22,13 +22,15 @@ class News extends Model
     {
         $results = DB::table($this->table)
             ->select(DB::raw('dove_news.news_id, dove_news.cat_id, dove_news.display_img, dove_news.title, dove_news.creatime,
-            dove_news.serial, category.cat_name'));
+            dove_news.serial, category.cat_name, dove_news.content'));
         if($category_id)
             $results = $results->where('dove_news.cat_id', $category_id);
         $results = $results
             ->leftJoin('dove_news_category as category', 'dove_news.cat_id', '=','category.news_cat_id')
             ->where('is_del', self::NOT_DEL)
             ->where('dove_news.firm_id', $firm_id)
+            ->orderBy('dove_news.serial', 'desc')
+            ->orderBy('dove_news.creatime', 'desc')
             ->paginate($page_size);
         $data = [
             'total'=>$results->total(),

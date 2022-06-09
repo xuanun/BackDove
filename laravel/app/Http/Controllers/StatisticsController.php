@@ -3,6 +3,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cage;
 use App\Models\CageLog;
 use App\Models\UserFactory;
 use Illuminate\Http\Request;
@@ -27,7 +28,7 @@ class StatisticsController extends Controller
             return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
 
         $model_cage_log = new CageLog();
-        $data_array = $model_cage_log->getStatementList($start_time, $end_time, $factory_id, $block_type, $block_id);
+        $data_array = $model_cage_log->getStatementList($start_time, $end_time, $factory_id, $block_type, $block_id, $firm_id);
         $return_data = array();
         foreach ($data_array as  $v)
         {
@@ -38,9 +39,6 @@ class StatisticsController extends Controller
                  //判断鸽子类型 组装数据 种鸽
                 if($v->type_id == 1)
                 {
-                    $last_time = strtotime("+1 month",strtotime($v->log_time));
-                    $p_last_survival = $model_cage_log->getSurvivalByTime($last_time, $v->cage_id, $v->type_id);
-                    $return_data[$v->log_time.$v->block_id]['p_last_survival'] = empty($p_last_survival) ? $return_data[$v->log_time.$v->block_id]['p_last_survival'] : $p_last_survival + $return_data[$v->log_time.$v->block_id]['p_last_survival'];
                     $return_data[$v->log_time.$v->block_id]['p_disease'] = empty($v->disease) ? $return_data[$v->log_time.$v->block_id]['p_disease'] : $v->disease + $return_data[$v->log_time.$v->block_id]['p_disease'];
                     $return_data[$v->log_time.$v->block_id]['p_death'] = empty($v->death) ? $return_data[$v->log_time.$v->block_id]['p_death'] : $v->death + $return_data[$v->log_time.$v->block_id]['p_death'];
                     $return_data[$v->log_time.$v->block_id]['p_shift_to'] = empty($v->shift_to) ? $return_data[$v->log_time.$v->block_id]['p_shift_to'] : $v->shift_to +  $return_data[$v->log_time.$v->block_id]['p_shift_to'];
@@ -79,9 +77,10 @@ class StatisticsController extends Controller
                 $return_data[$v->log_time.$v->block_id]['log_time'] = $v->log_time;
                 $return_data[$v->log_time.$v->block_id]['factory_name'] = $v->factory_name;
                 $return_data[$v->log_time.$v->block_id]['block_name'] = $v->block_name;
+                $return_data[$v->log_time.$v->block_id]['type_name'] = $v->type_name;
                 $return_data[$v->log_time.$v->block_id]['block_id'] = $v->block_id;
                 $return_data[$v->log_time.$v->block_id]['factory_id'] = $v->factory_id;
-                $return_data[$v->log_time.$v->block_id]['p_last_survival'] = 0;
+                //$return_data[$v->log_time.$v->block_id]['p_last_survival'] = 0;
                 $return_data[$v->log_time.$v->block_id]['p_disease'] = 0;
                 $return_data[$v->log_time.$v->block_id]['p_death'] = 0;
                 $return_data[$v->log_time.$v->block_id]['p_shift_to'] = 0;
@@ -101,11 +100,13 @@ class StatisticsController extends Controller
                 $return_data[$v->log_time.$v->block_id]['c_shift_to'] = 0;
                 $return_data[$v->log_time.$v->block_id]['c_disease'] = 0;
                 $return_data[$v->log_time.$v->block_id]['c_death'] = 0;
+
+                $time =  strtotime(date('Y-m-01',strtotime($v->log_time)));
+                $last_time = strtotime(date('Y-m-d',$time));//计算出本月第一天
+                $p_last_survival = $model_cage_log->getSurvivalByTime($last_time, $v->block_id, 1);
+                $return_data[$v->log_time.$v->block_id]['p_last_survival'] = empty($p_last_survival) ? 0 : $p_last_survival;
                 if($v->type_id == 1)
                 {
-                    $last_time = strtotime("+1 month",strtotime($v->log_time));
-                    $p_last_survival = $model_cage_log->getSurvivalByTime($last_time, $v->cage_id, $v->type_id);
-                    $return_data[$v->log_time.$v->block_id]['p_last_survival'] = empty($p_last_survival) ? 0 : $p_last_survival;
                     $return_data[$v->log_time.$v->block_id]['p_disease'] = empty($v->disease) ? 0 : $v->disease;
                     $return_data[$v->log_time.$v->block_id]['p_death'] = empty($v->death) ? 0 : $v->death;
                     $return_data[$v->log_time.$v->block_id]['p_shift_to'] = empty($v->shift_to) ? 0 : $v->shift_to;
@@ -159,7 +160,19 @@ class StatisticsController extends Controller
             return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
 
         $model_cage_log = new CageLog();
-        $data_array = $model_cage_log->getStatementListByType($start_time, $end_time, $factory_id, $block_type, $block_id,4);
+        $data_array = $model_cage_log->getStatementListByType($start_time, $end_time, $factory_id, $block_type, $block_id, $firm_id, 4);
+        // 统计 鸽仓 鸽子类型 总存栏 计算病残 死亡率  2021-10-13
+        $model_cage = new Cage();
+        $data_survival = $model_cage->getSumAmount($block_id);
+        $array_survival = array();
+        foreach ($data_survival as $v)
+        {
+            $array_survival['sum_pigeon'] = $v->sum_pigeon;
+            $array_survival['sum_egg'] = $v->sum_egg;
+            $array_survival['sum_squab'] = $v->sum_squab;
+            $array_survival['sum_child'] = $v->sum_child;
+            $array_survival['sum_youth'] = $v->sum_youth;
+        }
         $return_data = array();
         foreach ($data_array as  $v)
         {
@@ -184,6 +197,7 @@ class StatisticsController extends Controller
                 $return_data[$v->log_time.$v->block_id]['log_time'] = $v->log_time;
                 $return_data[$v->log_time.$v->block_id]['factory_name'] = $v->factory_name;
                 $return_data[$v->log_time.$v->block_id]['block_name'] = $v->block_name;
+                $return_data[$v->log_time.$v->block_id]['type_name'] = $v->type_name;
                 $return_data[$v->log_time.$v->block_id]['block_id'] = $v->block_id;
                 $return_data[$v->log_time.$v->block_id]['factory_id'] = $v->factory_id;
                 $return_data[$v->log_time.$v->block_id]['c_day_survival'] = 0;
@@ -215,8 +229,8 @@ class StatisticsController extends Controller
         $return_array = array();
         foreach ($return_data as $v)
         {
-            $v['c_mortality'] = empty($v['c_day_survival']) ? 0 : round($v['c_death'] *100 / $v['c_day_survival'], 2).'%';
-            $v['c_disability'] = empty($v['c_day_survival']) ? 0 : round($v['c_disease'] *100 / $v['c_day_survival'], 2).'%';
+            $v['c_mortality'] = empty($array_survival['sum_child']) ? 0 : round($v['c_death'] *100 / $array_survival['sum_child'], 2).'%';
+            $v['c_disability'] = empty($array_survival['sum_child']) ? 0 : round($v['c_disease'] *100 / $array_survival['sum_child'], 2).'%';
             $return_array[] = $v;
         }
         return response()->json(['code'=>20000, 'msg'=>'请求成功', 'data'=>$return_array]);
@@ -240,7 +254,19 @@ class StatisticsController extends Controller
             return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
 
         $model_cage_log = new CageLog();
-        $data_array = $model_cage_log->getStatementListByType($start_time, $end_time, $factory_id, $block_type, $block_id, 0);
+        $data_array = $model_cage_log->getStatementListByType($start_time, $end_time, $factory_id, $block_type, $block_id, $firm_id,0);
+        // 统计 鸽仓 鸽子类型 总存栏 计算病残 死亡率  2021-10-13
+        $model_cage = new Cage();
+        $data_survival = $model_cage->getSumAmount($block_id);
+        $array_survival = array();
+        foreach ($data_survival as $v)
+        {
+            $array_survival['sum_pigeon'] = $v->sum_pigeon;
+            $array_survival['sum_egg'] = $v->sum_egg;
+            $array_survival['sum_squab'] = $v->sum_squab;
+            $array_survival['sum_child'] = $v->sum_child;
+            $array_survival['sum_youth'] = $v->sum_youth;
+        }
         $return_data = array();
         foreach ($data_array as  $v)
         {
@@ -267,6 +293,7 @@ class StatisticsController extends Controller
                 $return_data[$v->log_time.$v->block_id]['log_time'] = $v->log_time;
                 $return_data[$v->log_time.$v->block_id]['factory_name'] = $v->factory_name;
                 $return_data[$v->log_time.$v->block_id]['block_name'] = $v->block_name;
+                $return_data[$v->log_time.$v->block_id]['type_name'] = $v->type_name;
                 $return_data[$v->log_time.$v->block_id]['block_id'] = $v->block_id;
                 $return_data[$v->log_time.$v->block_id]['factory_id'] = $v->factory_id;
                 $return_data[$v->log_time.$v->block_id]['y_day_survival'] = 0;//数量
@@ -302,8 +329,8 @@ class StatisticsController extends Controller
         $return_array = array();
         foreach ($return_data as $v)
         {
-            $v['y_mortality'] = empty($v['y_day_survival']) ? 0 : round($v['y_death'] *100 / $v['y_day_survival'], 2).'%';
-            $v['y_disability'] = empty($v['y_day_survival']) ? 0 : round($v['y_disease'] *100 / $v['y_day_survival'], 2).'%';
+            $v['y_mortality'] = empty($array_survival['sum_youth']) ? 0 : round($v['y_death'] *100 / $array_survival['sum_youth'], 2).'%';
+            $v['y_disability'] = empty($array_survival['sum_youth']) ? 0 : round($v['y_disease'] *100 / $array_survival['sum_youth'], 2).'%';
             $return_array[] = $v;
         }
         return response()->json(['code'=>20000, 'msg'=>'请求成功', 'data'=>$return_array]);
@@ -328,8 +355,19 @@ class StatisticsController extends Controller
             return response()->json(['code'=>60000,'msg'=>'缺少参数', 'data'=>[]]);
 
         $model_cage_log = new CageLog();
-        $data_array = $model_cage_log->getStatementListByType($start_time, $end_time, $factory_id, $block_type, $block_id, $type_id);
-        //return  [$data_array];
+        $data_array = $model_cage_log->getStatementListByType($start_time, $end_time, $factory_id, $block_type, $block_id, $firm_id, $type_id);
+        // 统计 鸽仓 鸽子类型 总存栏 计算病残 死亡率  2021-10-13
+        $model_cage = new Cage();
+        $data_survival = $model_cage->getSumAmount($block_id);
+        $array_survival = array();
+        foreach ($data_survival as $v)
+        {
+            $array_survival['sum_pigeon'] = $v->sum_pigeon;
+            $array_survival['sum_egg'] = $v->sum_egg;
+            $array_survival['sum_squab'] = $v->sum_squab;
+            $array_survival['sum_child'] = $v->sum_child;
+            $array_survival['sum_youth'] = $v->sum_youth;
+        }
         $return_data = array();
         foreach ($data_array as  $v)
         {
@@ -370,6 +408,7 @@ class StatisticsController extends Controller
                 $return_data[$v->log_time.$v->block_id]['log_time'] = $v->log_time;
                 $return_data[$v->log_time.$v->block_id]['factory_name'] = $v->factory_name;
                 $return_data[$v->log_time.$v->block_id]['block_name'] = $v->block_name;
+                $return_data[$v->log_time.$v->block_id]['type_name'] = $v->type_name;
                 $return_data[$v->log_time.$v->block_id]['block_id'] = $v->block_id;
                 $return_data[$v->log_time.$v->block_id]['factory_id'] = $v->factory_id;
                 $return_data[$v->log_time.$v->block_id]['p_day_survival'] = 0;//数量
@@ -409,8 +448,8 @@ class StatisticsController extends Controller
         $return_array = array();
         foreach ($return_data as $v)
         {
-            $v['p_mortality'] = empty($v['p_day_survival']) ? 0 : round($v['p_death'] *100 / $v['p_day_survival'], 2).'%';
-            $v['p_disability'] = empty($v['p_day_survival']) ? 0 : round($v['p_disease'] *100 / $v['p_day_survival'], 2).'%';
+            $v['p_mortality'] = empty( $array_survival['sum_pigeon']) ? 0 : round($v['p_death'] *100 /  $array_survival['sum_pigeon'], 2).'%';
+            $v['p_disability'] = empty( $array_survival['sum_pigeon']) ? 0 : round($v['p_disease'] *100 /  $array_survival['sum_pigeon'], 2).'%';
             $return_array[] = $v;
         }
         return response()->json(['code'=>20000, 'msg'=>'请求成功', 'data'=>$return_array]);
@@ -426,25 +465,14 @@ class StatisticsController extends Controller
         $model_user_factory = new UserFactory();
         $return_data = $model_user_factory->getUsersInfo($block_id);
         $array  = array();
+        $array['breeder'] = '';
+        $array['carer'] = '';
         foreach ($return_data as $v)
         {
             if($v->role_name == '饲养员')
-            {
                 $array['breeder'] = $v->user_name;
-            }else
-                $array['breeder'] = '';
             if($v->role_name == '护工')
-            {
                 $array['carer'] = $v->user_name;
-            }else
-                $array['carer'] = '';
-        }
-        if(empty($array['breeder']) &&  isset($return_data[0])){
-            $array['breeder'] = $return_data[0]->user_name;
-        }
-        if(empty($array['carer']) &&  isset($return_data[1]))
-        {
-            $array['carer'] = $return_data[1]->user_name;
         }
         return $array;
     }
